@@ -98,18 +98,11 @@ enum QRModuleStyle: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum QRCodeGenerationMode: String, Codable, CaseIterable, Identifiable {
+enum QRCodeGenerationMode: String, Codable, Identifiable {
     case standard
     case staticImage
 
     var id: String { rawValue }
-
-    var titleKey: String {
-        switch self {
-        case .standard: "option.generationMode.standard"
-        case .staticImage: "option.generationMode.staticImage"
-        }
-    }
 }
 
 enum QRVisualEffect: String, Codable, CaseIterable, Identifiable {
@@ -130,20 +123,6 @@ enum QRVisualEffect: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum QRExportFormat: String, Codable, CaseIterable, Identifiable {
-    case png
-    case jpeg
-
-    var id: String { rawValue }
-
-    var titleKey: String {
-        switch self {
-        case .png: "option.exportFormat.png"
-        case .jpeg: "option.exportFormat.jpeg"
-        }
-    }
-}
-
 struct QRCodeSettings: Codable, Equatable {
     var generationMode: QRCodeGenerationMode
     var foregroundColor: QRColor
@@ -157,11 +136,12 @@ struct QRCodeSettings: Codable, Equatable {
     var centerIconImageData: Data?
     var centerIconScale: Double
     var visualEffect: QRVisualEffect
-    var exportFormat: QRExportFormat
+    var photoAlbumName: String
     var createdAt: Date?
     var updatedAt: Date?
 
     static let defaultSampleText = "https://example.com"
+    static let defaultPhotoAlbumName = "QRToGo"
 
     static var defaults: QRCodeSettings {
         QRCodeSettings(
@@ -177,7 +157,7 @@ struct QRCodeSettings: Codable, Equatable {
             centerIconImageData: nil,
             centerIconScale: 0.18,
             visualEffect: .none,
-            exportFormat: .png,
+            photoAlbumName: defaultPhotoAlbumName,
             createdAt: nil,
             updatedAt: nil
         )
@@ -196,7 +176,7 @@ struct QRCodeSettings: Codable, Equatable {
         centerIconImageData: Data?,
         centerIconScale: Double,
         visualEffect: QRVisualEffect,
-        exportFormat: QRExportFormat,
+        photoAlbumName: String,
         createdAt: Date?,
         updatedAt: Date?
     ) {
@@ -212,7 +192,7 @@ struct QRCodeSettings: Codable, Equatable {
         self.centerIconImageData = centerIconImageData
         self.centerIconScale = centerIconScale
         self.visualEffect = visualEffect
-        self.exportFormat = exportFormat
+        self.photoAlbumName = photoAlbumName
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -225,12 +205,26 @@ struct QRCodeSettings: Codable, Equatable {
         staticImageData != nil
     }
 
+    var resolvedPhotoAlbumName: String {
+        let trimmedName = photoAlbumName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName.isEmpty ? Self.defaultPhotoAlbumName : trimmedName
+    }
+
     func withUpdatedTimestamp(_ date: Date = .now) -> QRCodeSettings {
         var copy = self
         if copy.createdAt == nil {
             copy.createdAt = date
         }
         copy.updatedAt = date
+        return copy
+    }
+
+    func normalized() -> QRCodeSettings {
+        var copy = self
+        if copy.generationMode == .staticImage {
+            copy.centerIconEnabled = false
+        }
+        copy.photoAlbumName = copy.resolvedPhotoAlbumName
         return copy
     }
 
@@ -247,7 +241,7 @@ struct QRCodeSettings: Codable, Equatable {
         case centerIconImageData
         case centerIconScale
         case visualEffect
-        case exportFormat
+        case photoAlbumName
         case createdAt
         case updatedAt
     }
@@ -268,9 +262,11 @@ struct QRCodeSettings: Codable, Equatable {
         centerIconImageData = try container.decodeIfPresent(Data.self, forKey: .centerIconImageData)
         centerIconScale = try container.decodeIfPresent(Double.self, forKey: .centerIconScale) ?? defaults.centerIconScale
         visualEffect = try container.decodeIfPresent(QRVisualEffect.self, forKey: .visualEffect) ?? defaults.visualEffect
-        exportFormat = try container.decodeIfPresent(QRExportFormat.self, forKey: .exportFormat) ?? defaults.exportFormat
+        photoAlbumName = try container.decodeIfPresent(String.self, forKey: .photoAlbumName) ?? defaults.photoAlbumName
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+
+        self = normalized()
     }
 }
 

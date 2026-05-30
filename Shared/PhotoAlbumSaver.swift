@@ -26,15 +26,14 @@ enum PhotoAlbumSaverError: LocalizedError {
 }
 
 struct PhotoAlbumSaver {
-    static let albumName = "Generated QR Codes"
-
-    func savePNGData(_ data: Data) async throws {
+    func savePNGData(_ data: Data, albumName: String) async throws {
+        let albumName = resolvedAlbumName(from: albumName)
         let status = await requestAuthorizationStatus()
         guard status == .authorized || status == .limited else {
             throw PhotoAlbumSaverError.permissionDenied
         }
 
-        let albumIdentifier = try await findOrCreateAlbumIdentifier()
+        let albumIdentifier = try await findOrCreateAlbumIdentifier(named: albumName)
         let assetIdentifier = try await createAssetIdentifier(with: data)
         try await addAsset(identifier: assetIdentifier, toAlbumIdentifier: albumIdentifier)
     }
@@ -47,14 +46,14 @@ struct PhotoAlbumSaver {
         }
     }
 
-    private func findOrCreateAlbumIdentifier() async throws -> String {
-        if let existingAlbum = fetchAlbum() {
+    private func findOrCreateAlbumIdentifier(named albumName: String) async throws -> String {
+        if let existingAlbum = fetchAlbum(named: albumName) {
             return existingAlbum.localIdentifier
         }
         return try await withCheckedThrowingContinuation { continuation in
             var placeholder: PHObjectPlaceholder?
             PHPhotoLibrary.shared().performChanges({
-                let request = PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: Self.albumName)
+                let request = PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: albumName)
                 placeholder = request.placeholderForCreatedAssetCollection
             }, completionHandler: { success, error in
                 if success, let identifier = placeholder?.localIdentifier {
@@ -104,10 +103,15 @@ struct PhotoAlbumSaver {
         }
     }
 
-    private func fetchAlbum() -> PHAssetCollection? {
+    private func fetchAlbum(named albumName: String) -> PHAssetCollection? {
         let options = PHFetchOptions()
-        options.predicate = NSPredicate(format: "title = %@", Self.albumName)
+        options.predicate = NSPredicate(format: "title = %@", albumName)
         let collections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .albumRegular, options: options)
         return collections.firstObject
+    }
+
+    private func resolvedAlbumName(from albumName: String) -> String {
+        let trimmedName = albumName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName.isEmpty ? QRCodeSettings.defaultPhotoAlbumName : trimmedName
     }
 }

@@ -157,7 +157,7 @@ final class SettingsViewModel {
     func setCenterIconData(_ data: Data?) {
         guard let data else {
             draftSettings.centerIconImageData = nil
-            draftSettings.centerIconEnabled = false
+            setCenterLogoEnabled(false)
             return
         }
         guard let preparedData = prepareImageData(from: data, maxDimension: 240) else {
@@ -165,20 +165,18 @@ final class SettingsViewModel {
             return
         }
         draftSettings.centerIconImageData = preparedData
-        draftSettings.centerIconEnabled = true
+        setCenterLogoEnabled(true)
     }
 
     func removeCenterIcon() {
         draftSettings.centerIconImageData = nil
-        draftSettings.centerIconEnabled = false
+        setCenterLogoEnabled(false)
     }
 
     func setStaticImageData(_ data: Data?) {
         guard let data else {
             draftSettings.staticImageData = nil
-            if draftSettings.generationMode == .staticImage {
-                draftSettings.generationMode = .standard
-            }
+            setGenerationMode(.standard)
             return
         }
         guard let preparedData = prepareImageData(from: data, maxDimension: 1400) else {
@@ -186,13 +184,25 @@ final class SettingsViewModel {
             return
         }
         draftSettings.staticImageData = preparedData
-        draftSettings.generationMode = .staticImage
+        setGenerationMode(.staticImage)
     }
 
     func removeStaticImage() {
         draftSettings.staticImageData = nil
-        if draftSettings.generationMode == .staticImage {
+        setGenerationMode(.standard)
+    }
+
+    func setCenterLogoEnabled(_ isEnabled: Bool) {
+        if isEnabled {
             draftSettings.generationMode = .standard
+        }
+        draftSettings.centerIconEnabled = isEnabled
+    }
+
+    func setGenerationMode(_ mode: QRCodeGenerationMode) {
+        draftSettings.generationMode = mode
+        if mode == .staticImage {
+            draftSettings.centerIconEnabled = false
         }
     }
 
@@ -206,9 +216,13 @@ final class SettingsViewModel {
         defer { isSavingPreview = false }
 
         do {
-            let output = try generatorService.generate(content: sampleText, settings: draftSettings)
-            try await photoAlbumSaver.savePNGData(output.pngData)
-            statusMessage = NSLocalizedString("settings.savePreviewSuccess", comment: "Preview saved")
+            let settings = draftSettings.normalized()
+            let output = try generatorService.generate(content: sampleText, settings: settings)
+            try await photoAlbumSaver.savePNGData(output.pngData, albumName: settings.photoAlbumName)
+            statusMessage = String.localizedStringWithFormat(
+                NSLocalizedString("settings.savePreviewSuccess", comment: "Preview saved"),
+                settings.photoAlbumName
+            )
         } catch {
             statusMessage = error.localizedDescription
         }

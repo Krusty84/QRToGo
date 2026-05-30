@@ -10,67 +10,16 @@ import SwiftUI
 import UIKit
 
 struct SettingsView: View {
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var viewModel = SettingsViewModel()
+    @Bindable var viewModel: SettingsViewModel
     @State private var selectedIconItem: PhotosPickerItem?
     @State private var selectedStaticImageItem: PhotosPickerItem?
-    @FocusState private var isSampleTextFocused: Bool
+    @FocusState private var isAlbumNameFocused: Bool
 
     private let outputSizes = [512, 768, 1024, 1536]
 
     var body: some View {
-        @Bindable var viewModel = viewModel
-
         NavigationStack {
             Form {
-                Section("settings.section.preview") {
-                    TextField("settings.sampleText", text: $viewModel.sampleText, axis: .vertical)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .submitLabel(.done)
-                        .focused($isSampleTextFocused)
-
-                    QRPreviewView(
-                        image: viewModel.previewImage,
-                        isLoading: viewModel.isGeneratingPreview,
-                        errorMessage: viewModel.previewErrorMessage
-                    )
-
-                    VStack(alignment: .leading, spacing: 10) {
-                        Label("settings.scannability", systemImage: "checkmark.shield")
-                            .font(.headline)
-
-                        if viewModel.validationResults.isEmpty {
-                            Text("settings.scannability.safe")
-                                .font(.subheadline)
-                                .foregroundStyle(.green)
-                        } else {
-                            ForEach(viewModel.validationResults) { result in
-                                Label {
-                                    Text(LocalizedStringKey(result.messageKey))
-                                } icon: {
-                                    Image(systemName: result.severity == .error ? "exclamationmark.triangle.fill" : "exclamationmark.circle")
-                                        .foregroundStyle(result.severity == .error ? .orange : .yellow)
-                                }
-                                .font(.subheadline)
-                            }
-                        }
-                    }
-
-                    Button {
-                        Task {
-                            await viewModel.savePreviewToPhotos()
-                        }
-                    } label: {
-                        if viewModel.isSavingPreview {
-                            ProgressView()
-                        } else {
-                            Label("settings.savePreview", systemImage: "photo.badge.plus")
-                        }
-                    }
-                    .disabled(viewModel.isSavingPreview || viewModel.isGeneratingPreview || viewModel.hasBlockingValidation)
-                }
-
                 Section("settings.section.colors") {
                     ColorPicker("settings.foregroundColor", selection: foregroundColorBinding, supportsOpacity: false)
                     ColorPicker("settings.backgroundColor", selection: backgroundColorBinding, supportsOpacity: false)
@@ -97,11 +46,11 @@ struct SettingsView: View {
                 }
 
                 Section("settings.section.visualStyle") {
-                    Picker("settings.generationMode", selection: $viewModel.draftSettings.generationMode) {
-                        ForEach(QRCodeGenerationMode.allCases) { mode in
-                            Text(LocalizedStringKey(mode.titleKey)).tag(mode)
-                        }
-                    }
+                    Toggle("settings.staticImageMode", isOn: staticImageModeBinding)
+                        .disabled(viewModel.draftSettings.centerIconEnabled)
+
+                    Toggle("settings.centerIconEnabled", isOn: centerLogoEnabledBinding)
+                        .disabled(viewModel.draftSettings.generationMode == .staticImage)
 
                     Picker("settings.moduleStyle", selection: $viewModel.draftSettings.moduleStyle) {
                         ForEach(QRModuleStyle.allCases) { style in
@@ -110,32 +59,10 @@ struct SettingsView: View {
                     }
 
                     if viewModel.draftSettings.generationMode == .staticImage {
-                        if let staticImagePreview {
-                            HStack(spacing: 12) {
-                                Image(uiImage: staticImagePreview)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 68, height: 68)
-                                    .clipShape(.rect(cornerRadius: 16))
-
-                                Text("settings.staticImageReady")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-
-                                Spacer()
-                            }
-                        } else {
-                            Text("settings.noStaticImage")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-
                         PhotosPicker(selection: $selectedStaticImageItem, matching: .images) {
-                            Label(
-                                staticImagePreview == nil ? "settings.staticImagePick" : "settings.staticImageReplace",
-                                systemImage: "photo.on.rectangle.angled"
-                            )
+                            staticImagePickerContent
                         }
+                        .buttonStyle(.plain)
 
                         if staticImagePreview != nil {
                             Button("settings.staticImageRemove", role: .destructive) {
@@ -144,35 +71,11 @@ struct SettingsView: View {
                         }
                     }
 
-                    Toggle("settings.centerIconEnabled", isOn: $viewModel.draftSettings.centerIconEnabled)
-
                     if viewModel.draftSettings.centerIconEnabled {
-                        if let centerLogoImage {
-                            HStack(spacing: 12) {
-                                Image(uiImage: centerLogoImage)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 52, height: 52)
-                                    .clipShape(.rect(cornerRadius: 14))
-
-                                Text("settings.centerIconReady")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-
-                                Spacer()
-                            }
-                        } else {
-                            Text("settings.noLogo")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-
                         PhotosPicker(selection: $selectedIconItem, matching: .images) {
-                            Label(
-                                centerLogoImage == nil ? "settings.centerIconPick" : "settings.centerIconReplace",
-                                systemImage: "photo"
-                            )
+                            centerLogoPickerContent
                         }
+                        .buttonStyle(.plain)
 
                         if centerLogoImage != nil {
                             Button("settings.centerIconRemove", role: .destructive) {
@@ -200,15 +103,15 @@ struct SettingsView: View {
                 }
 
                 Section("settings.section.export") {
-                    Picker("settings.exportFormat", selection: $viewModel.draftSettings.exportFormat) {
-                        ForEach(QRExportFormat.allCases) { format in
-                            Text(LocalizedStringKey(format.titleKey)).tag(format)
-                        }
-                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("settings.albumName")
 
-                    Text("settings.exportNote")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        TextField(QRCodeSettings.defaultPhotoAlbumName, text: $viewModel.draftSettings.photoAlbumName)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.words)
+                            .submitLabel(.done)
+                            .focused($isAlbumNameFocused)
+                    }
 
                     Button("settings.reset", role: .destructive) {
                         viewModel.resetToDefaults()
@@ -229,30 +132,15 @@ struct SettingsView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle("settings.title")
+            .navigationTitle("tab.settings")
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("share.done") {
-                        isSampleTextFocused = false
+                        isAlbumNameFocused = false
                     }
                 }
             }
-        }
-        .task {
-            viewModel.loadIfNeeded()
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            guard newPhase == .active else {
-                return
-            }
-            viewModel.refreshSampleTextFromPasteboardIfNeeded()
-        }
-        .onChange(of: viewModel.sampleText) { _, _ in
-            viewModel.refreshPreview()
-        }
-        .onChange(of: viewModel.draftSettings) { _, _ in
-            viewModel.refreshPreview()
         }
         .onChange(of: selectedIconItem) { _, newItem in
             Task {
@@ -288,6 +176,28 @@ struct SettingsView: View {
         )
     }
 
+    private var staticImageModeBinding: Binding<Bool> {
+        Binding(
+            get: {
+                viewModel.draftSettings.generationMode == .staticImage
+            },
+            set: { isEnabled in
+                viewModel.setGenerationMode(isEnabled ? .staticImage : .standard)
+            }
+        )
+    }
+
+    private var centerLogoEnabledBinding: Binding<Bool> {
+        Binding(
+            get: {
+                viewModel.draftSettings.centerIconEnabled
+            },
+            set: { newValue in
+                viewModel.setCenterLogoEnabled(newValue)
+            }
+        )
+    }
+
     private var centerLogoImage: UIImage? {
         guard let data = viewModel.draftSettings.centerIconImageData else {
             return nil
@@ -300,6 +210,65 @@ struct SettingsView: View {
             return nil
         }
         return UIImage(data: data)
+    }
+
+    @ViewBuilder
+    private var centerLogoPickerContent: some View {
+        if let centerLogoImage {
+            ZStack {
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color(uiColor: .secondarySystemBackground))
+
+                Image(uiImage: centerLogoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(24)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 180)
+            .overlay(alignment: .bottomTrailing) {
+                Image(systemName: "photo.badge.plus")
+                    .font(.headline)
+                    .padding(10)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .padding(12)
+            }
+        } else {
+            ContentUnavailableView(
+                "settings.centerIconPick",
+                systemImage: "photo"
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 180)
+            .background(Color(uiColor: .secondarySystemBackground), in: .rect(cornerRadius: 18))
+        }
+    }
+
+    @ViewBuilder
+    private var staticImagePickerContent: some View {
+        if let staticImagePreview {
+            Image(uiImage: staticImagePreview)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+                .frame(height: 180)
+                .clipShape(.rect(cornerRadius: 18))
+                .overlay(alignment: .bottomTrailing) {
+                    Image(systemName: "photo.badge.plus")
+                        .font(.headline)
+                        .padding(10)
+                        .background(.ultraThinMaterial, in: Circle())
+                        .padding(12)
+                }
+        } else {
+            ContentUnavailableView(
+                "settings.staticImagePick",
+                systemImage: "photo.on.rectangle.angled"
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 180)
+            .background(Color(uiColor: .secondarySystemBackground), in: .rect(cornerRadius: 18))
+        }
     }
 
     @MainActor
@@ -336,5 +305,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(viewModel: SettingsViewModel())
 }

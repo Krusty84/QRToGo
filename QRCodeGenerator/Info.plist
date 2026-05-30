@@ -39,7 +39,7 @@
         </dict>
     </dict>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Read and write Photos access is required to save QR codes into the Generated QR Codes album.</string>
+	<string>Read and write Photos access is required to save QR codes to Photos.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>Photos access is required to save generated QR codes.</string>
 </dict>

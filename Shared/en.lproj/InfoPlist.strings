@@ -1,2 +1,2 @@
 "NSPhotoLibraryAddUsageDescription" = "Photos access is required to save generated QR codes.";
-"NSPhotoLibraryUsageDescription" = "Read and write Photos access is required to save QR codes into the Generated QR Codes album.";
+"NSPhotoLibraryUsageDescription" = "Read and write Photos access is required to save QR codes to Photos.";

@@ -13,7 +13,6 @@ import UIKit
 struct QRCodeRenderOutput {
     let image: UIImage
     let pngData: Data
-    let exportData: Data
 }
 
 enum QRCodeGeneratorError: LocalizedError {
@@ -137,17 +136,7 @@ struct QRCodeGeneratorService {
             guard let pngData = finalImage.pngData() else {
                 throw QRCodeGeneratorError.exportFailed
             }
-            let exportData: Data
-            switch settings.exportFormat {
-            case .png:
-                exportData = pngData
-            case .jpeg:
-                guard let jpegData = finalImage.jpegData(compressionQuality: 0.92) else {
-                    throw QRCodeGeneratorError.exportFailed
-                }
-                exportData = jpegData
-            }
-            return QRCodeRenderOutput(image: finalImage, pngData: pngData, exportData: exportData)
+            return QRCodeRenderOutput(image: finalImage, pngData: pngData)
         } catch let error as QRCodeGeneratorError {
             throw error
         } catch {

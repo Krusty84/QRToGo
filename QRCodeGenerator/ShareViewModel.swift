@@ -84,8 +84,11 @@ final class ShareViewModel {
         }
 
         do {
-            try await photoAlbumSaver.savePNGData(output.pngData)
-            statusMessage = NSLocalizedString("share.saveSuccess", comment: "Share save success")
+            try await photoAlbumSaver.savePNGData(output.pngData, albumName: settings.photoAlbumName)
+            statusMessage = String.localizedStringWithFormat(
+                NSLocalizedString("share.saveSuccess", comment: "Share save success"),
+                settings.photoAlbumName
+            )
         } catch {
             statusMessage = error.localizedDescription
         }
