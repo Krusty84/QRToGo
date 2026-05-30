@@ -5,13 +5,10 @@
 //  Created by Codex on 30/05/2026.
 //
 
-import CoreTransferable
 import Foundation
-import UniformTypeIdentifiers
 
 enum GenerateContentKind: String, CaseIterable, Identifiable {
     case website
-    case localFile
     case contact
     case wifi
     case text
@@ -27,7 +24,6 @@ enum GenerateContentKind: String, CaseIterable, Identifiable {
     var titleKey: String {
         switch self {
         case .website: "generate.kind.website"
-        case .localFile: "generate.kind.localFile"
         case .contact: "generate.kind.contact"
         case .wifi: "generate.kind.wifi"
         case .text: "generate.kind.text"
@@ -37,6 +33,21 @@ enum GenerateContentKind: String, CaseIterable, Identifiable {
         case .call: "generate.kind.call"
         case .event: "generate.kind.event"
         case .location: "generate.kind.location"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .website: "globe"
+        case .contact: "person.crop.circle"
+        case .wifi: "wifi"
+        case .text: "text.alignleft"
+        case .clipboard: "doc.on.clipboard"
+        case .email: "envelope"
+        case .sms: "message"
+        case .call: "phone"
+        case .event: "calendar"
+        case .location: "location"
         }
     }
 }
@@ -65,23 +76,6 @@ enum GenerateWiFiSecurity: String, CaseIterable, Identifiable {
     }
 }
 
-struct GenerateSelectedLocalContent: Equatable {
-    let payload: LocalFilePayload
-
-    var fileName: String { payload.fileName }
-    var contentType: String { payload.contentType }
-    var size: Int64 { payload.size }
-
-    var payloadString: String {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys]
-        guard let data = try? encoder.encode(payload) else {
-            return ""
-        }
-        return String(decoding: data, as: UTF8.self)
-    }
-}
-
 struct GenerateSelectedContact: Equatable {
     let displayName: String
     let vCardString: String
@@ -90,7 +84,6 @@ struct GenerateSelectedContact: Equatable {
 struct GenerateContentDraft: Equatable {
     var kind: GenerateContentKind = .text
     var clipboardText = ""
-    var localContent: GenerateSelectedLocalContent?
     var contact: GenerateSelectedContact?
     var wifiSSID = ""
     var wifiPassword = ""
@@ -117,7 +110,6 @@ struct GenerateContentDraft: Equatable {
 enum GenerateContentError: LocalizedError {
     case websiteNotImplemented
     case clipboardEmpty
-    case localFileMissing
     case contactMissing
     case wifiSSIDMissing
     case wifiPasswordMissing
@@ -134,8 +126,6 @@ enum GenerateContentError: LocalizedError {
             NSLocalizedString("error.generateWebsiteUnavailable", comment: "Website unavailable")
         case .clipboardEmpty:
             NSLocalizedString("error.generateClipboardEmpty", comment: "Clipboard empty")
-        case .localFileMissing:
-            NSLocalizedString("error.generateLocalFileMissing", comment: "Local file missing")
         case .contactMissing:
             NSLocalizedString("error.generateContactMissing", comment: "Contact missing")
         case .wifiSSIDMissing:
@@ -154,24 +144,6 @@ enum GenerateContentError: LocalizedError {
             NSLocalizedString("error.generateEventDateRangeInvalid", comment: "Event date range invalid")
         case .locationInvalid:
             NSLocalizedString("error.generateLocationInvalid", comment: "Location invalid")
-        }
-    }
-}
-
-struct PickedMediaFile: Transferable {
-    let url: URL
-
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(importedContentType: .item) { received in
-            let sourceURL = received.file
-            let destinationURL = FileManager.default.temporaryDirectory
-                .appending(path: UUID().uuidString)
-                .appendingPathExtension(sourceURL.pathExtension)
-            if FileManager.default.fileExists(atPath: destinationURL.path) {
-                try FileManager.default.removeItem(at: destinationURL)
-            }
-            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
-            return Self(url: destinationURL)
         }
     }
 }

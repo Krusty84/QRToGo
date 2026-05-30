@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Contacts
 import UIKit
 import UniformTypeIdentifiers
 
@@ -14,6 +15,7 @@ struct SharedInputCandidate: Identifiable, Hashable {
         case webURL
         case telegramLink
         case remoteFileURL
+        case contact
         case text
         case localFileMetadata
 
@@ -24,6 +26,7 @@ struct SharedInputCandidate: Identifiable, Hashable {
             case .webURL: "candidate.kind.webURL"
             case .telegramLink: "candidate.kind.telegramLink"
             case .remoteFileURL: "candidate.kind.remoteFileURL"
+            case .contact: "candidate.kind.contact"
             case .text: "candidate.kind.text"
             case .localFileMetadata: "candidate.kind.localFileMetadata"
             }
@@ -34,8 +37,9 @@ struct SharedInputCandidate: Identifiable, Hashable {
             case .webURL: 0
             case .telegramLink: 1
             case .remoteFileURL: 2
-            case .text: 3
-            case .localFileMetadata: 4
+            case .contact: 3
+            case .text: 4
+            case .localFileMetadata: 5
             }
         }
     }
@@ -96,6 +100,10 @@ struct SharedInputReader {
             }
         }
 
+        if let vCardCandidate = try? await vCardCandidate(from: provider) {
+            return [vCardCandidate]
+        }
+
         var parsedCandidates: [SharedInputCandidate] = []
 
         if let directURL = try? await loadURL(from: provider, typeIdentifier: UTType.url.identifier) {
@@ -103,11 +111,17 @@ struct SharedInputReader {
         }
 
         if let fileURL = try? await loadURL(from: provider, typeIdentifier: UTType.fileURL.identifier) {
-            if fileURL.isFileURL, let localCandidate = try? await localFileCandidate(for: fileURL, typeIdentifier: UTType.fileURL.identifier) {
+            if fileURL.isFileURL, let contactCandidate = try? await contactCandidate(for: fileURL, preferredTypeIdentifier: UTType.vCard.identifier) {
+                return [contactCandidate]
+            } else if fileURL.isFileURL, let localCandidate = try? await localFileCandidate(for: fileURL, typeIdentifier: UTType.fileURL.identifier) {
                 parsedCandidates.append(localCandidate)
             } else {
                 parsedCandidates.append(contentsOf: urlCandidates(from: fileURL))
             }
+        }
+
+        if let importedVCardCandidate = try? await importedVCardCandidate(from: provider) {
+            return [importedVCardCandidate]
         }
 
         if let importedFileCandidate = try? await importedFileCandidate(from: provider) {
@@ -127,6 +141,19 @@ struct SharedInputReader {
         }
 
         return deduplicatedAndSorted(parsedCandidates)
+    }
+
+    private func vCardCandidate(from provider: NSItemProvider) async throws -> SharedInputCandidate? {
+        let identifiers = provider.registeredTypeIdentifiers.filter(isVCardTypeIdentifier)
+        for typeIdentifier in identifiers {
+            if let candidate = try? await vCardCandidate(from: provider, typeIdentifier: typeIdentifier) {
+                return candidate
+            }
+        }
+        if identifiers.isEmpty, provider.hasItemConformingToTypeIdentifier(UTType.vCard.identifier) {
+            return try await vCardCandidate(from: provider, typeIdentifier: UTType.vCard.identifier)
+        }
+        return nil
     }
 
     private func safariCandidates(from provider: NSItemProvider) async throws -> [SharedInputCandidate] {
@@ -259,6 +286,15 @@ struct SharedInputReader {
         return nil
     }
 
+    private func importedVCardCandidate(from provider: NSItemProvider) async throws -> SharedInputCandidate? {
+        for typeIdentifier in provider.registeredTypeIdentifiers where isVCardTypeIdentifier(typeIdentifier) {
+            if let importedFile = try? await loadCopiedFile(from: provider, typeIdentifier: typeIdentifier) {
+                return try contactCandidate(for: importedFile.url, preferredTypeIdentifier: importedFile.typeIdentifier)
+            }
+        }
+        return nil
+    }
+
     private func imageCandidate(from provider: NSItemProvider) async throws -> SharedInputCandidate? {
         let preferredImageType = provider.registeredTypeIdentifiers.first { identifier in
             identifier == UTType.image.identifier
@@ -312,6 +348,60 @@ struct SharedInputReader {
             sourceTitle: nil,
             content: content,
             previewValue: url.lastPathComponent
+        )
+    }
+
+    private func vCardCandidate(from provider: NSItemProvider, typeIdentifier: String) async throws -> SharedInputCandidate? {
+        if let data = try? await loadDataRepresentation(from: provider, typeIdentifier: typeIdentifier) {
+            return try makeContactCandidate(from: data)
+        }
+
+        let item = try await loadItem(from: provider, typeIdentifier: typeIdentifier)
+        if let url = item as? URL, url.isFileURL {
+            return try contactCandidate(for: url, preferredTypeIdentifier: typeIdentifier)
+        }
+        if let nsURL = item as? NSURL, let url = nsURL as URL?, url.isFileURL {
+            return try contactCandidate(for: url, preferredTypeIdentifier: typeIdentifier)
+        }
+        if let data = item as? Data {
+            return try makeContactCandidate(from: data)
+        }
+        if let string = stringValue(item), let data = string.data(using: .utf8) {
+            return try makeContactCandidate(from: data)
+        }
+        return nil
+    }
+
+    private func contactCandidate(for url: URL, preferredTypeIdentifier: String) throws -> SharedInputCandidate? {
+        let values = try url.resourceValues(forKeys: [.contentTypeKey])
+        let contentType = values.contentType?.identifier
+            ?? UTType(filenameExtension: url.pathExtension)?.identifier
+            ?? preferredTypeIdentifier
+
+        guard isVCardTypeIdentifier(contentType) || url.pathExtension.lowercased() == "vcf" else {
+            return nil
+        }
+
+        let data = try Data(contentsOf: url)
+        return try makeContactCandidate(from: data)
+    }
+
+    private func makeContactCandidate(from data: Data) throws -> SharedInputCandidate? {
+        let contacts = try CNContactVCardSerialization.contacts(with: data)
+        guard let primaryContact = contacts.first else {
+            return nil
+        }
+
+        let normalizedData = try CNContactVCardSerialization.data(with: contacts)
+        let content = String(decoding: normalizedData, as: UTF8.self)
+        let displayName = contactDisplayName(from: primaryContact)
+        let previewValue = contactPreviewValue(from: primaryContact, fallback: displayName)
+
+        return SharedInputCandidate(
+            kind: .contact,
+            sourceTitle: displayName,
+            content: content,
+            previewValue: previewValue
         )
     }
 
@@ -428,7 +518,7 @@ struct SharedInputReader {
             UTType.html.identifier,
             UTType.propertyList.identifier
         ]
-        return excludedTypes.contains(typeIdentifier) == false
+        return excludedTypes.contains(typeIdentifier) == false && isVCardTypeIdentifier(typeIdentifier) == false
     }
 
     private func extractedLinkStrings(from text: String) -> [String] {
@@ -524,6 +614,48 @@ struct SharedInputReader {
             return string as String
         }
         return nil
+    }
+
+    private func isVCardTypeIdentifier(_ typeIdentifier: String) -> Bool {
+        if typeIdentifier == UTType.vCard.identifier {
+            return true
+        }
+        if let contentType = UTType(typeIdentifier) {
+            return contentType.conforms(to: .vCard)
+        }
+        return typeIdentifier.localizedCaseInsensitiveContains("vcard")
+    }
+
+    private func contactDisplayName(from contact: CNContact) -> String {
+        if let fullName = CNContactFormatter.string(from: contact, style: .fullName)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           fullName.isEmpty == false
+        {
+            return fullName
+        }
+
+        let organizationName = contact.organizationName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if organizationName.isEmpty == false {
+            return organizationName
+        }
+
+        return NSLocalizedString("share.contactFallback", comment: "Contact fallback")
+    }
+
+    private func contactPreviewValue(from contact: CNContact, fallback: String) -> String {
+        if let phone = contact.phoneNumbers.first?.value.stringValue.trimmingCharacters(in: .whitespacesAndNewlines),
+           phone.isEmpty == false
+        {
+            return phone
+        }
+
+        if let email = contact.emailAddresses.first?.value as String?,
+           email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        {
+            return email
+        }
+
+        return fallback
     }
 
     private let telegramSchemePattern = #"tg://[^\s<>"']+"#

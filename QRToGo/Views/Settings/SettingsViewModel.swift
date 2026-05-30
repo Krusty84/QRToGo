@@ -8,7 +8,6 @@
 import Contacts
 import Observation
 import UIKit
-import UniformTypeIdentifiers
 
 @Observable
 @MainActor
@@ -215,28 +214,6 @@ final class SettingsViewModel {
         contentDraft.contact = nil
     }
 
-    func importSelectedFile(at url: URL) {
-        do {
-            contentDraft.localContent = try makeLocalContent(from: url, preferredTypeIdentifier: nil)
-            statusMessage = nil
-        } catch {
-            statusMessage = NSLocalizedString("error.localFileImport", comment: "Local file import failed")
-        }
-    }
-
-    func importSelectedMediaFile(at url: URL, preferredTypeIdentifier: String?) {
-        do {
-            contentDraft.localContent = try makeLocalContent(from: url, preferredTypeIdentifier: preferredTypeIdentifier)
-            statusMessage = nil
-        } catch {
-            statusMessage = NSLocalizedString("error.localFileImport", comment: "Local file import failed")
-        }
-    }
-
-    func removeSelectedLocalContent() {
-        contentDraft.localContent = nil
-    }
-
     func savePreviewToPhotos() async {
         guard hasBlockingValidation == false else {
             statusMessage = NSLocalizedString("settings.fixErrorsFirst", comment: "Fix errors first")
@@ -296,11 +273,6 @@ final class SettingsViewModel {
         switch contentDraft.kind {
         case .website:
             throw GenerateContentError.websiteNotImplemented
-        case .localFile:
-            guard let localContent = contentDraft.localContent else {
-                throw GenerateContentError.localFileMissing
-            }
-            return localContent.payloadString
         case .contact:
             guard let contact = contentDraft.contact else {
                 throw GenerateContentError.contactMissing
@@ -463,40 +435,6 @@ final class SettingsViewModel {
             displayName: displayName,
             vCardString: String(decoding: vCardData, as: UTF8.self)
         )
-    }
-
-    private func makeLocalContent(from url: URL, preferredTypeIdentifier: String?) throws -> GenerateSelectedLocalContent {
-        let hasSecurityScope = url.startAccessingSecurityScopedResource()
-        defer {
-            if hasSecurityScope {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-
-        let fileManager = FileManager.default
-        let directoryURL = try AppGroupConfiguration.importedFilesDirectoryURL(fileManager: fileManager)
-        let fileName = url.lastPathComponent.isEmpty ? UUID().uuidString : url.lastPathComponent
-        let destinationURL = directoryURL.appending(path: "\(UUID().uuidString)-\(fileName)")
-
-        if fileManager.fileExists(atPath: destinationURL.path) {
-            try fileManager.removeItem(at: destinationURL)
-        }
-        try fileManager.copyItem(at: url, to: destinationURL)
-
-        let values = try destinationURL.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey])
-        let contentType = values.contentType?.identifier
-            ?? preferredTypeIdentifier
-            ?? UTType(filenameExtension: destinationURL.pathExtension)?.identifier
-            ?? UTType.data.identifier
-
-        let payload = LocalFilePayload(
-            type: "local-file",
-            fileName: destinationURL.lastPathComponent,
-            contentType: contentType,
-            size: Int64(values.fileSize ?? 0),
-            importId: destinationURL.deletingPathExtension().lastPathComponent
-        )
-        return GenerateSelectedLocalContent(payload: payload)
     }
 
     private func prepareImageData(from data: Data, maxDimension: CGFloat) -> Data? {

@@ -5,24 +5,45 @@
 //  Created by Codex on 30/05/2026.
 //
 
-import PhotosUI
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct GenerateView: View {
     @Bindable var viewModel: SettingsViewModel
-    @State private var isFileImporterPresented = false
     @State private var isContactPickerPresented = false
-    @State private var selectedMediaItem: PhotosPickerItem?
     @FocusState private var focusedField: FocusedField?
+
+    private let modeColumns = [
+        GridItem(.adaptive(minimum: 112), spacing: 12)
+    ]
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("generate.section.type") {
-                    Picker("generate.contentType", selection: contentKindBinding) {
+                    LazyVGrid(columns: modeColumns, spacing: 12) {
                         ForEach(GenerateContentKind.allCases) { kind in
-                            Text(LocalizedStringKey(kind.titleKey)).tag(kind)
+                            Button {
+                                viewModel.setContentKind(kind)
+                            } label: {
+                                VStack(spacing: 8) {
+                                    Image(systemName: kind.systemImage)
+                                        .font(.title3)
+                                    Text(LocalizedStringKey(kind.titleKey))
+                                        .font(.subheadline.weight(.medium))
+                                        .multilineTextAlignment(.center)
+                                        .lineLimit(2)
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 84)
+                                .padding(.horizontal, 8)
+                                .foregroundStyle(viewModel.contentDraft.kind == kind ? .white : .primary)
+                                .background(
+                                    viewModel.contentDraft.kind == kind
+                                        ? Color.accentColor
+                                        : Color(uiColor: .secondarySystemBackground),
+                                    in: .rect(cornerRadius: 16)
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -92,21 +113,6 @@ struct GenerateView: View {
                 }
             }
         }
-        .fileImporter(
-            isPresented: $isFileImporterPresented,
-            allowedContentTypes: [.item],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case let .success(urls):
-                guard let url = urls.first else {
-                    return
-                }
-                viewModel.importSelectedFile(at: url)
-            case .failure:
-                viewModel.statusMessage = NSLocalizedString("error.localFileImport", comment: "Local file import failed")
-            }
-        }
         .sheet(isPresented: $isContactPickerPresented) {
             ContactPickerView(
                 onSelect: { contact in
@@ -118,25 +124,6 @@ struct GenerateView: View {
                 }
             )
         }
-        .onChange(of: selectedMediaItem) { _, newItem in
-            guard let newItem else {
-                return
-            }
-            Task {
-                await importMediaItem(newItem)
-            }
-        }
-    }
-
-    private var contentKindBinding: Binding<GenerateContentKind> {
-        Binding(
-            get: {
-                viewModel.contentDraft.kind
-            },
-            set: { newValue in
-                viewModel.setContentKind(newValue)
-            }
-        )
     }
 
     @ViewBuilder
@@ -144,8 +131,6 @@ struct GenerateView: View {
         switch viewModel.contentDraft.kind {
         case .website:
             placeholderCard("generate.websiteUnavailable", systemImage: "globe.badge.chevron.backward")
-        case .localFile:
-            localFileEditor
         case .contact:
             contactEditor
         case .wifi:
@@ -164,36 +149,6 @@ struct GenerateView: View {
             eventEditor
         case .location:
             locationEditor
-        }
-    }
-
-    private var localFileEditor: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button("generate.filePicker", systemImage: "folder") {
-                isFileImporterPresented = true
-            }
-
-            PhotosPicker(selection: $selectedMediaItem, matching: .any(of: [.images, .videos])) {
-                Label("generate.mediaPicker", systemImage: "photo.stack")
-            }
-
-            if let localContent = viewModel.contentDraft.localContent {
-                LabeledContent("generate.localFileName", value: localContent.fileName)
-                LabeledContent("generate.localFileType", value: localContent.contentType)
-                LabeledContent(
-                    "generate.localFileSize",
-                    value: ByteCountFormatter.string(fromByteCount: localContent.size, countStyle: .file)
-                )
-                Text("share.localMetadataNotice")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-
-                Button("generate.localFileRemove", role: .destructive) {
-                    viewModel.removeSelectedLocalContent()
-                }
-            } else {
-                placeholderCard("generate.localFilePlaceholder", systemImage: "doc.badge.plus")
-            }
         }
     }
 
@@ -345,23 +300,6 @@ struct GenerateView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .background(Color(uiColor: .secondarySystemBackground), in: .rect(cornerRadius: 18))
-    }
-
-    @MainActor
-    private func importMediaItem(_ item: PhotosPickerItem) async {
-        do {
-            guard let importedFile = try await item.loadTransferable(type: PickedMediaFile.self) else {
-                return
-            }
-            viewModel.importSelectedMediaFile(
-                at: importedFile.url,
-                preferredTypeIdentifier: item.supportedContentTypes.first?.identifier
-            )
-        } catch {
-            viewModel.statusMessage = error.localizedDescription
-        }
-
-        selectedMediaItem = nil
     }
 }
 

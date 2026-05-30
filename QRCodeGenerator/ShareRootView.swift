@@ -154,6 +154,8 @@ struct ShareRootView: View {
             "paperplane"
         case .remoteFileURL:
             "link"
+        case .contact:
+            "person.crop.circle"
         case .text:
             "text.alignleft"
         case .localFileMetadata:

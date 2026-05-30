@@ -1,4 +1,5 @@
 "candidate.kind.localFileMetadata" = "Local file metadata";
+"candidate.kind.contact" = "Contact";
 "candidate.kind.remoteFileURL" = "Remote file URL";
 "candidate.kind.telegramLink" = "Telegram link";
 "candidate.kind.text" = "Text";
@@ -13,7 +14,6 @@
 "error.generateEmailRecipientMissing" = "Enter at least one email recipient.";
 "error.generateEventDateRangeInvalid" = "Event end time must be later than the start time.";
 "error.generateEventTitleMissing" = "Enter an event title.";
-"error.generateLocalFileMissing" = "Choose a file, photo, or video first.";
 "error.generateLocationInvalid" = "Enter a valid latitude and longitude.";
 "error.generatePhoneNumberMissing" = "Enter a phone number.";
 "error.generateSMSNumberMissing" = "Enter an SMS number.";
@@ -49,7 +49,6 @@
 "generate.contactPick" = "Choose contact";
 "generate.contactPlaceholder" = "Choose a contact from your address book.";
 "generate.contactRemove" = "Remove contact";
-"generate.contentType" = "Content type";
 "generate.emailBody" = "Email body";
 "generate.emailRecipient" = "Email recipient";
 "generate.emailSubject" = "Email subject";
@@ -58,27 +57,19 @@
 "generate.eventNotes" = "Event notes";
 "generate.eventStart" = "Start";
 "generate.eventTitle" = "Event title";
-"generate.filePicker" = "Choose file";
 "generate.kind.call" = "Call";
 "generate.kind.clipboard" = "Clipboard";
 "generate.kind.contact" = "Contact";
 "generate.kind.email" = "Email";
 "generate.kind.event" = "Event";
-"generate.kind.localFile" = "File / Photo / Video";
 "generate.kind.location" = "Location";
 "generate.kind.sms" = "SMS";
 "generate.kind.text" = "Text";
 "generate.kind.website" = "Website";
 "generate.kind.wifi" = "Wi-Fi";
-"generate.localFileName" = "Name";
-"generate.localFilePlaceholder" = "Choose a local file, photo, or video.";
-"generate.localFileRemove" = "Remove selected item";
-"generate.localFileSize" = "Size";
-"generate.localFileType" = "Type";
 "generate.locationLabel" = "Location label";
 "generate.locationLatitude" = "Latitude";
 "generate.locationLongitude" = "Longitude";
-"generate.mediaPicker" = "Choose photo or video";
 "generate.section.content" = "Content";
 "generate.section.type" = "Type";
 "generate.smsMessage" = "SMS message";
@@ -125,6 +116,7 @@
 "settings.visualEffect" = "Visual effect";
 "share.candidatePicker" = "Detected content";
 "share.cancel" = "Cancel";
+"share.contactFallback" = "Contact";
 "share.done" = "Done";
 "share.loading" = "Reading shared content…";
 "share.localMetadataNotice" = "This QR encodes local file metadata, not a public download URL.";
