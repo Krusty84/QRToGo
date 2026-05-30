@@ -1,3 +1,10 @@
+//
+//  ShareViewModel.swift
+//  QRToGo
+//
+//  Created by Sedoykin Alexey on 26/05/2026.
+//
+
 import Observation
 import UIKit
 
