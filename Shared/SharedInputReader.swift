@@ -530,14 +530,6 @@ struct SharedInputReader {
     private let telegramHostPattern = #"(?:https?://)?(?:(?:[A-Za-z0-9_]+\.)?t\.me|telegram\.me)/[A-Za-z0-9_/?=&.%+-]+"#
 }
 
-private struct LocalFilePayload: Codable {
-    let type: String
-    let fileName: String
-    let contentType: String
-    let size: Int64
-    let importId: String
-}
-
 private struct ImportedFile {
     let url: URL
     let typeIdentifier: String

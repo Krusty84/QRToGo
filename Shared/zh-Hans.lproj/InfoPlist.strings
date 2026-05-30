@@ -1,2 +1,3 @@
+"NSContactsUsageDescription" = "从通讯录创建二维码需要访问“联系人”。";
 "NSPhotoLibraryAddUsageDescription" = "保存生成的二维码需要访问“照片”。";
 "NSPhotoLibraryUsageDescription" = "将二维码保存到“照片”需要读写“照片”访问权限。";
