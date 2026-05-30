@@ -11,10 +11,8 @@
 
         <key>NSExtensionAttributes</key>
         <dict>
-            <key>NSExtensionJavaScriptPreprocessingFile</key>
-            <string>SharePreprocessor</string>
             <key>NSExtensionActivationRule</key>
-            <string>SUBQUERY ( extensionItems, $extensionItem, SUBQUERY ( $extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.movie" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.contact" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.vcard" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.apple.property-list" ).@count == $extensionItem.attachments.@count &amp;&amp; $extensionItem.attachments.@count &lt;= 20 ).@count &gt;= 1</string>
+            <string>SUBQUERY ( extensionItems, $extensionItem, SUBQUERY ( $extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.contact" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.vcard" ).@count == $extensionItem.attachments.@count &amp;&amp; $extensionItem.attachments.@count &lt;= 20 ).@count &gt;= 1</string>
         </dict>
     </dict>
     <key>NSPhotoLibraryUsageDescription</key>

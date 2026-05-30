@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct GenerateView: View {
-    @Bindable var viewModel: SettingsViewModel
+    @Bindable var viewModel: GenerateViewModel
+    let settingsViewModel: SettingsViewModel
     @State private var isContactPickerPresented = false
     @FocusState private var focusedField: FocusedField?
 
@@ -64,12 +65,12 @@ struct GenerateView: View {
                         Label("settings.scannability", systemImage: "checkmark.shield")
                             .font(.headline)
 
-                        if viewModel.validationResults.isEmpty {
+                        if settingsViewModel.validationResults.isEmpty {
                             Text("settings.scannability.safe")
                                 .font(.subheadline)
                                 .foregroundStyle(.green)
                         } else {
-                            ForEach(viewModel.validationResults) { result in
+                            ForEach(settingsViewModel.validationResults) { result in
                                 Label {
                                     Text(LocalizedStringKey(result.messageKey))
                                 } icon: {
@@ -83,7 +84,7 @@ struct GenerateView: View {
 
                     Button {
                         Task {
-                            await viewModel.savePreviewToPhotos()
+                            await viewModel.savePreviewToPhotos(using: settingsViewModel.draftSettings)
                         }
                     } label: {
                         if viewModel.isSavingPreview {
@@ -92,7 +93,11 @@ struct GenerateView: View {
                             Label("settings.savePreview", systemImage: "photo.badge.plus")
                         }
                     }
-                    .disabled(viewModel.isSavingPreview || viewModel.isGeneratingPreview || viewModel.hasBlockingValidation)
+                    .disabled(
+                        viewModel.isSavingPreview
+                            || viewModel.isGeneratingPreview
+                            || settingsViewModel.hasBlockingValidation
+                    )
                 }
 
                 if let statusMessage = viewModel.statusMessage {
@@ -300,5 +305,8 @@ private enum FocusedField: Hashable {
 }
 
 #Preview {
-    GenerateView(viewModel: SettingsViewModel())
+    GenerateView(
+        viewModel: GenerateViewModel(),
+        settingsViewModel: SettingsViewModel()
+    )
 }

@@ -58,12 +58,6 @@ struct ShareRootView: View {
                                     .font(.subheadline)
                                     .lineLimit(3)
                                     .truncationMode(.middle)
-
-                                if candidate.kind == .localFileMetadata {
-                                    Text("share.localMetadataNotice")
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                }
                             }
                         }
 
@@ -156,10 +150,6 @@ struct ShareRootView: View {
             "link"
         case .contact:
             "person.crop.circle"
-        case .text:
-            "text.alignleft"
-        case .localFileMetadata:
-            "doc.text"
         }
     }
 }

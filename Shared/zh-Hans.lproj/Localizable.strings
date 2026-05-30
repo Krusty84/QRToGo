@@ -1,8 +1,6 @@
-"candidate.kind.localFileMetadata" = "本地文件元数据";
 "candidate.kind.contact" = "联系人";
 "candidate.kind.remoteFileURL" = "远程文件链接";
 "candidate.kind.telegramLink" = "Telegram 链接";
-"candidate.kind.text" = "文本";
 "candidate.kind.webURL" = "网页链接";
 "error.appGroupUnavailable" = "共享 App Group 容器不可用。";
 "error.emptyContent" = "没有可编码的内容。";
@@ -119,7 +117,6 @@
 "share.contactFallback" = "联系人";
 "share.done" = "完成";
 "share.loading" = "正在读取共享内容…";
-"share.localMetadataNotice" = "此二维码编码的是本地文件元数据，不是公开下载链接。";
 "share.preview" = "二维码预览";
 "share.save" = "保存到“照片”";
 "share.saveSuccess" = "已保存到 %@。";

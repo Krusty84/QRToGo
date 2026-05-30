@@ -1,8 +1,6 @@
-"candidate.kind.localFileMetadata" = "Local file metadata";
 "candidate.kind.contact" = "Contact";
 "candidate.kind.remoteFileURL" = "Remote file URL";
 "candidate.kind.telegramLink" = "Telegram link";
-"candidate.kind.text" = "Text";
 "candidate.kind.webURL" = "Web URL";
 "error.appGroupUnavailable" = "The shared App Group container is unavailable.";
 "error.emptyContent" = "There is no content to encode.";
@@ -96,14 +94,14 @@
 "settings.resetDone" = "Defaults restored.";
 "settings.save" = "Save settings";
 "settings.saved" = "Settings saved.";
-"settings.savePreview" = "Save preview to Photos";
-"settings.savePreviewSuccess" = "Preview saved to %@.";
+"settings.savePreview" = "Save QR to Photos";
+"settings.savePreviewSuccess" = "QR saved to %@.";
 "settings.scannability" = "Scannability";
 "settings.scannability.safe" = "Current settings look scan-safe.";
 "settings.section.language" = "Language";
 "settings.section.colors" = "Colors";
 "settings.section.export" = "Export";
-"settings.section.preview" = "Content Preview";
+"settings.section.preview" = "Generated QR Code";
 "settings.section.readability" = "Readability";
 "settings.section.visualStyle" = "Visual style";
 "settings.staticImageMode" = "Static image mode";
@@ -119,7 +117,6 @@
 "share.contactFallback" = "Contact";
 "share.done" = "Done";
 "share.loading" = "Reading shared content…";
-"share.localMetadataNotice" = "This QR encodes local file metadata, not a public download URL.";
 "share.preview" = "QR preview";
 "share.save" = "Save to Photos";
 "share.saveSuccess" = "Saved to %@.";

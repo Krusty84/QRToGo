@@ -8,16 +8,20 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var viewModel = SettingsViewModel()
+    @State private var settingsViewModel = SettingsViewModel()
+    @State private var generateViewModel = GenerateViewModel()
 
     var body: some View {
         TabView {
-            GenerateView(viewModel: viewModel)
+            GenerateView(
+                viewModel: generateViewModel,
+                settingsViewModel: settingsViewModel
+            )
                 .tabItem {
                     Label("tab.generate", systemImage: "qrcode.viewfinder")
                 }
 
-            SettingsView(viewModel: viewModel)
+            SettingsView(viewModel: settingsViewModel)
                 .tabItem {
                     Label("tab.settings", systemImage: "gearshape")
                 }
@@ -28,14 +32,18 @@ struct ContentView: View {
                 }
         }
         .task {
-            viewModel.loadIfNeeded()
+            settingsViewModel.loadIfNeeded()
+            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
         }
-        .environment(\.locale, viewModel.appLanguage.locale)
-        .onChange(of: viewModel.contentDraft) { _, _ in
-            viewModel.refreshPreview()
+        .environment(\.locale, settingsViewModel.appLanguage.locale)
+        .onChange(of: generateViewModel.contentDraft) { _, _ in
+            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
         }
-        .onChange(of: viewModel.draftSettings) { _, _ in
-            viewModel.refreshPreview()
+        .onChange(of: settingsViewModel.draftSettings) { _, _ in
+            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
+        }
+        .onChange(of: settingsViewModel.appLanguage) { _, _ in
+            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
         }
     }
 }
