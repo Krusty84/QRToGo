@@ -16,11 +16,11 @@ enum PhotoAlbumSaverError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .permissionDenied:
-            NSLocalizedString("error.photoPermissionDenied", comment: "Photos permission denied")
+            AppLocalization.string("error.photoPermissionDenied")
         case .albumUnavailable:
-            NSLocalizedString("error.photoAlbum", comment: "Album unavailable")
+            AppLocalization.string("error.photoAlbum")
         case .saveFailed:
-            NSLocalizedString("error.photoSave", comment: "Photo save failed")
+            AppLocalization.string("error.photoSave")
         }
     }
 }

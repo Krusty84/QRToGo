@@ -102,6 +102,17 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("settings.section.language") {
+                    ForEach(AppLanguage.allCases) { language in
+                        Button {
+                            viewModel.setAppLanguage(language)
+                        } label: {
+                            languageRow(for: language)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                
                 Section("settings.section.export") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("settings.albumName")
@@ -133,14 +144,11 @@ struct SettingsView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("tab.settings")
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("share.done") {
-                        isAlbumNameFocused = false
-                    }
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    isAlbumNameFocused = false
                 }
-            }
+            )
         }
         .onChange(of: selectedIconItem) { _, newItem in
             Task {
@@ -163,6 +171,20 @@ struct SettingsView: View {
                 viewModel.draftSettings.foregroundColor = QRColor(uiColor: UIColor(newValue))
             }
         )
+    }
+
+    @ViewBuilder
+    private func languageRow(for language: AppLanguage) -> some View {
+        let isSelected = viewModel.appLanguage == language
+
+        HStack {
+            Text(LocalizedStringKey(language.titleKey))
+            Spacer()
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .foregroundStyle(Color.accentColor)
+            }
+        }
     }
 
     private var backgroundColorBinding: Binding<Color> {

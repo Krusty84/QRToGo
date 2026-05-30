@@ -13,34 +13,35 @@ struct GenerateView: View {
     @FocusState private var focusedField: FocusedField?
 
     private let modeColumns = [
-        GridItem(.adaptive(minimum: 112), spacing: 12)
+        GridItem(.adaptive(minimum: 60, maximum: 72), spacing: 8)
     ]
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("generate.section.type") {
-                    LazyVGrid(columns: modeColumns, spacing: 12) {
+                    LazyVGrid(columns: modeColumns, spacing: 8) {
                         ForEach(GenerateContentKind.allCases) { kind in
                             Button {
                                 viewModel.setContentKind(kind)
                             } label: {
-                                VStack(spacing: 8) {
+                                VStack(spacing: 4) {
                                     Image(systemName: kind.systemImage)
-                                        .font(.title3)
+                                        .font(.body.weight(.semibold))
                                     Text(LocalizedStringKey(kind.titleKey))
-                                        .font(.subheadline.weight(.medium))
+                                        .font(.caption2.weight(.medium))
                                         .multilineTextAlignment(.center)
                                         .lineLimit(2)
+                                        .minimumScaleFactor(0.75)
                                 }
-                                .frame(maxWidth: .infinity, minHeight: 84)
-                                .padding(.horizontal, 8)
+                                .frame(maxWidth: .infinity, minHeight: 58)
+                                .padding(.horizontal, 4)
                                 .foregroundStyle(viewModel.contentDraft.kind == kind ? .white : .primary)
                                 .background(
                                     viewModel.contentDraft.kind == kind
                                         ? Color.accentColor
                                         : Color(uiColor: .secondarySystemBackground),
-                                    in: .rect(cornerRadius: 16)
+                                    in: .rect(cornerRadius: 14)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -104,14 +105,11 @@ struct GenerateView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("tab.generate")
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("share.done") {
-                        focusedField = nil
-                    }
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    focusedField = nil
                 }
-            }
+            )
         }
         .sheet(isPresented: $isContactPickerPresented) {
             ContactPickerView(
@@ -130,15 +128,11 @@ struct GenerateView: View {
     private var contentEditor: some View {
         switch viewModel.contentDraft.kind {
         case .website:
-            placeholderCard("generate.websiteUnavailable", systemImage: "globe.badge.chevron.backward")
+            websiteEditor
         case .contact:
             contactEditor
         case .wifi:
             wifiEditor
-        case .text:
-            textEditor
-        case .clipboard:
-            clipboardEditor
         case .email:
             emailEditor
         case .sms:
@@ -150,6 +144,15 @@ struct GenerateView: View {
         case .location:
             locationEditor
         }
+    }
+
+    private var websiteEditor: some View {
+        TextField("generate.websiteURL", text: $viewModel.contentDraft.websiteURL)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .keyboardType(.URL)
+            .textContentType(.URL)
+            .focused($focusedField, equals: .websiteURL)
     }
 
     private var contactEditor: some View {
@@ -192,31 +195,6 @@ struct GenerateView: View {
             }
 
             Toggle("generate.wifiHidden", isOn: $viewModel.contentDraft.wifiIsHidden)
-        }
-    }
-
-    private var textEditor: some View {
-        TextField("settings.sampleText", text: $viewModel.sampleText, axis: .vertical)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .submitLabel(.done)
-            .focused($focusedField, equals: .text)
-    }
-
-    private var clipboardEditor: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button("generate.clipboardReload", systemImage: "doc.on.clipboard") {
-                viewModel.reloadClipboardContent()
-            }
-
-            if viewModel.contentDraft.clipboardText.isEmpty {
-                placeholderCard("generate.clipboardPlaceholder", systemImage: "doc.on.clipboard")
-            } else {
-                Text(viewModel.contentDraft.clipboardText)
-                    .font(.body)
-                    .textSelection(.enabled)
-                    .lineLimit(6)
-            }
         }
     }
 
@@ -304,7 +282,7 @@ struct GenerateView: View {
 }
 
 private enum FocusedField: Hashable {
-    case text
+    case websiteURL
     case wifiSSID
     case wifiPassword
     case emailRecipient

@@ -11,8 +11,6 @@ enum GenerateContentKind: String, CaseIterable, Identifiable {
     case website
     case contact
     case wifi
-    case text
-    case clipboard
     case email
     case sms
     case call
@@ -26,8 +24,6 @@ enum GenerateContentKind: String, CaseIterable, Identifiable {
         case .website: "generate.kind.website"
         case .contact: "generate.kind.contact"
         case .wifi: "generate.kind.wifi"
-        case .text: "generate.kind.text"
-        case .clipboard: "generate.kind.clipboard"
         case .email: "generate.kind.email"
         case .sms: "generate.kind.sms"
         case .call: "generate.kind.call"
@@ -41,8 +37,6 @@ enum GenerateContentKind: String, CaseIterable, Identifiable {
         case .website: "globe"
         case .contact: "person.crop.circle"
         case .wifi: "wifi"
-        case .text: "text.alignleft"
-        case .clipboard: "doc.on.clipboard"
         case .email: "envelope"
         case .sms: "message"
         case .call: "phone"
@@ -82,8 +76,8 @@ struct GenerateSelectedContact: Equatable {
 }
 
 struct GenerateContentDraft: Equatable {
-    var kind: GenerateContentKind = .text
-    var clipboardText = ""
+    var kind: GenerateContentKind = .wifi
+    var websiteURL = ""
     var contact: GenerateSelectedContact?
     var wifiSSID = ""
     var wifiPassword = ""
@@ -108,8 +102,8 @@ struct GenerateContentDraft: Equatable {
 }
 
 enum GenerateContentError: LocalizedError {
-    case websiteNotImplemented
-    case clipboardEmpty
+    case websiteURLMissing
+    case websiteURLInvalid
     case contactMissing
     case wifiSSIDMissing
     case wifiPasswordMissing
@@ -122,28 +116,28 @@ enum GenerateContentError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .websiteNotImplemented:
-            NSLocalizedString("error.generateWebsiteUnavailable", comment: "Website unavailable")
-        case .clipboardEmpty:
-            NSLocalizedString("error.generateClipboardEmpty", comment: "Clipboard empty")
+        case .websiteURLMissing:
+            AppLocalization.string("error.generateWebsiteMissing")
+        case .websiteURLInvalid:
+            AppLocalization.string("error.generateWebsiteInvalid")
         case .contactMissing:
-            NSLocalizedString("error.generateContactMissing", comment: "Contact missing")
+            AppLocalization.string("error.generateContactMissing")
         case .wifiSSIDMissing:
-            NSLocalizedString("error.generateWiFiSSIDMissing", comment: "Wi-Fi SSID missing")
+            AppLocalization.string("error.generateWiFiSSIDMissing")
         case .wifiPasswordMissing:
-            NSLocalizedString("error.generateWiFiPasswordMissing", comment: "Wi-Fi password missing")
+            AppLocalization.string("error.generateWiFiPasswordMissing")
         case .emailRecipientMissing:
-            NSLocalizedString("error.generateEmailRecipientMissing", comment: "Email recipient missing")
+            AppLocalization.string("error.generateEmailRecipientMissing")
         case .smsNumberMissing:
-            NSLocalizedString("error.generateSMSNumberMissing", comment: "SMS number missing")
+            AppLocalization.string("error.generateSMSNumberMissing")
         case .phoneNumberMissing:
-            NSLocalizedString("error.generatePhoneNumberMissing", comment: "Phone number missing")
+            AppLocalization.string("error.generatePhoneNumberMissing")
         case .eventTitleMissing:
-            NSLocalizedString("error.generateEventTitleMissing", comment: "Event title missing")
+            AppLocalization.string("error.generateEventTitleMissing")
         case .eventDateRangeInvalid:
-            NSLocalizedString("error.generateEventDateRangeInvalid", comment: "Event date range invalid")
+            AppLocalization.string("error.generateEventDateRangeInvalid")
         case .locationInvalid:
-            NSLocalizedString("error.generateLocationInvalid", comment: "Location invalid")
+            AppLocalization.string("error.generateLocationInvalid")
         }
     }
 }

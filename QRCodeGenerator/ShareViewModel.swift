@@ -86,7 +86,7 @@ final class ShareViewModel {
         do {
             try await photoAlbumSaver.savePNGData(output.pngData, albumName: settings.photoAlbumName)
             statusMessage = String.localizedStringWithFormat(
-                NSLocalizedString("share.saveSuccess", comment: "Share save success"),
+                AppLocalization.string("share.saveSuccess"),
                 settings.photoAlbumName
             )
         } catch {
@@ -106,7 +106,7 @@ final class ShareViewModel {
     private func regeneratePreview() async {
         guard let candidate = selectedCandidate else {
             previewImage = nil
-            previewErrorMessage = NSLocalizedString("error.noCandidateSelected", comment: "No candidate selected")
+            previewErrorMessage = AppLocalization.string("error.noCandidateSelected")
             renderedOutput = nil
             return
         }

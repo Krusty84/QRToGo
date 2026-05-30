@@ -61,9 +61,9 @@ enum SharedInputReaderError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noSupportedContent:
-            NSLocalizedString("error.noSupportedContent", comment: "No supported content")
+            AppLocalization.string("error.noSupportedContent")
         case .localFileImport:
-            NSLocalizedString("error.localFileImport", comment: "Local file import failed")
+            AppLocalization.string("error.localFileImport")
         }
     }
 }
@@ -639,7 +639,7 @@ struct SharedInputReader {
             return organizationName
         }
 
-        return NSLocalizedString("share.contactFallback", comment: "Contact fallback")
+        return AppLocalization.string("share.contactFallback")
     }
 
     private func contactPreviewValue(from contact: CNContact, fallback: String) -> String {

@@ -140,7 +140,6 @@ struct QRCodeSettings: Codable, Equatable {
     var createdAt: Date?
     var updatedAt: Date?
 
-    static let defaultSampleText = "https://example.com"
     static let defaultPhotoAlbumName = "QRToGo"
 
     static var defaults: QRCodeSettings {

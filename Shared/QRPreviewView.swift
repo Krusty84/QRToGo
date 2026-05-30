@@ -29,7 +29,7 @@ struct QRPreviewView: View {
                     .padding(18)
             } else {
                 ContentUnavailableView(
-                    NSLocalizedString("settings.previewUnavailable", comment: "Preview unavailable"),
+                    AppLocalization.string("settings.previewUnavailable"),
                     systemImage: "qrcode",
                     description: errorMessage.map { Text(verbatim: $0) }
                 )

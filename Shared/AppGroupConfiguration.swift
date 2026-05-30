@@ -10,6 +10,7 @@ import Foundation
 enum AppGroupConfiguration {
     static let identifier = "group.com.krusty84.QRToGo"
     static let settingsKey = "qrCodeSettings"
+    static let appLanguageKey = "appLanguage"
     static let importedFilesDirectoryName = "ImportedFiles"
 
     static func userDefaults() throws -> UserDefaults {
@@ -40,7 +41,7 @@ enum AppGroupError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unavailable:
-            NSLocalizedString("error.appGroupUnavailable", comment: "App Group unavailable")
+            AppLocalization.string("error.appGroupUnavailable")
         }
     }
 }

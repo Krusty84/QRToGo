@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel = SettingsViewModel()
 
     var body: some View {
@@ -31,15 +30,7 @@ struct ContentView: View {
         .task {
             viewModel.loadIfNeeded()
         }
-        .onChange(of: scenePhase) { _, newPhase in
-            guard newPhase == .active else {
-                return
-            }
-            viewModel.refreshSampleTextFromPasteboardIfNeeded()
-        }
-        .onChange(of: viewModel.sampleText) { _, _ in
-            viewModel.refreshPreview()
-        }
+        .environment(\.locale, viewModel.appLanguage.locale)
         .onChange(of: viewModel.contentDraft) { _, _ in
             viewModel.refreshPreview()
         }

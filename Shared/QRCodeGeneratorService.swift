@@ -27,17 +27,17 @@ enum QRCodeGeneratorError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .emptyContent:
-            NSLocalizedString("error.emptyContent", comment: "Empty content")
+            AppLocalization.string("error.emptyContent")
         case .iconDecodeFailed:
-            NSLocalizedString("error.iconDecode", comment: "Icon decode failed")
+            AppLocalization.string("error.iconDecode")
         case .staticImageMissing:
-            NSLocalizedString("error.staticImageMissing", comment: "Static image missing")
+            AppLocalization.string("error.staticImageMissing")
         case .staticImageDecodeFailed:
-            NSLocalizedString("error.staticImageDecode", comment: "Static image decode failed")
+            AppLocalization.string("error.staticImageDecode")
         case .renderFailed:
-            NSLocalizedString("error.previewGenerate", comment: "QR render failed")
+            AppLocalization.string("error.previewGenerate")
         case .exportFailed:
-            NSLocalizedString("error.exportData", comment: "Export data failed")
+            AppLocalization.string("error.exportData")
         case let .underlying(error):
             error.localizedDescription
         }

@@ -13,10 +13,11 @@ import UIKit
 @MainActor
 final class SettingsViewModel {
     private let settingsStore: QRCodeSettingsStore
+    private let appLanguageStore: AppLanguageStore
     private let generatorService: QRCodeGeneratorService
     private let photoAlbumSaver: PhotoAlbumSaver
 
-    var sampleText = QRCodeSettings.defaultSampleText
+    var appLanguage: AppLanguage = .system
     var contentDraft = GenerateContentDraft.defaults
     var draftSettings = QRCodeSettings.defaults
     var persistedSettings = QRCodeSettings.defaults
@@ -29,15 +30,15 @@ final class SettingsViewModel {
 
     private var hasLoaded = false
     private var previewTask: Task<Void, Never>?
-    private var lastSeenPasteboardChangeCount: Int?
-    private var lastAppliedPasteboardText: String?
 
     init(
         settingsStore: QRCodeSettingsStore? = nil,
+        appLanguageStore: AppLanguageStore? = nil,
         generatorService: QRCodeGeneratorService? = nil,
         photoAlbumSaver: PhotoAlbumSaver? = nil
     ) {
         self.settingsStore = settingsStore ?? QRCodeSettingsStore()
+        self.appLanguageStore = appLanguageStore ?? AppLanguageStore()
         self.generatorService = generatorService ?? QRCodeGeneratorService()
         self.photoAlbumSaver = photoAlbumSaver ?? PhotoAlbumSaver()
     }
@@ -55,6 +56,7 @@ final class SettingsViewModel {
             return
         }
         hasLoaded = true
+        appLanguage = appLanguageStore.load()
 
         do {
             let loadedSettings = try settingsStore.load()
@@ -65,24 +67,21 @@ final class SettingsViewModel {
             persistedSettings = .defaults
             draftSettings = .defaults
         }
-
-        refreshSampleTextFromPasteboardIfNeeded()
         refreshPreview()
-    }
-
-    func refreshSampleTextFromPasteboardIfNeeded() {
-        applyPasteboardContent(force: false)
-    }
-
-    func reloadClipboardContent() {
-        applyPasteboardContent(force: true)
     }
 
     func setContentKind(_ kind: GenerateContentKind) {
         contentDraft.kind = kind
-        if kind == .clipboard {
-            applyPasteboardContent(force: true)
+    }
+
+    func setAppLanguage(_ language: AppLanguage) {
+        guard appLanguage != language else {
+            return
         }
+        appLanguage = language
+        appLanguageStore.save(language)
+        statusMessage = nil
+        refreshPreview()
     }
 
     func refreshPreview() {
@@ -130,7 +129,7 @@ final class SettingsViewModel {
 
     func saveSettings() {
         guard hasBlockingValidation == false else {
-            statusMessage = NSLocalizedString("settings.fixErrorsFirst", comment: "Fix errors first")
+            statusMessage = AppLocalization.string("settings.fixErrorsFirst")
             return
         }
 
@@ -138,7 +137,7 @@ final class SettingsViewModel {
             let savedSettings = try settingsStore.save(draftSettings)
             persistedSettings = savedSettings
             draftSettings = savedSettings
-            statusMessage = NSLocalizedString("settings.saved", comment: "Settings saved")
+            statusMessage = AppLocalization.string("settings.saved")
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -146,7 +145,7 @@ final class SettingsViewModel {
 
     func resetToDefaults() {
         draftSettings = .defaults
-        statusMessage = NSLocalizedString("settings.resetDone", comment: "Defaults restored")
+        statusMessage = AppLocalization.string("settings.resetDone")
     }
 
     func setCenterIconData(_ data: Data?) {
@@ -156,7 +155,7 @@ final class SettingsViewModel {
             return
         }
         guard let preparedData = prepareImageData(from: data, maxDimension: 240) else {
-            statusMessage = NSLocalizedString("error.iconDecode", comment: "Icon decode failed")
+            statusMessage = AppLocalization.string("error.iconDecode")
             return
         }
         draftSettings.centerIconImageData = preparedData
@@ -175,7 +174,7 @@ final class SettingsViewModel {
             return
         }
         guard let preparedData = prepareImageData(from: data, maxDimension: 1400) else {
-            statusMessage = NSLocalizedString("error.staticImageDecode", comment: "Static image decode failed")
+            statusMessage = AppLocalization.string("error.staticImageDecode")
             return
         }
         draftSettings.staticImageData = preparedData
@@ -216,7 +215,7 @@ final class SettingsViewModel {
 
     func savePreviewToPhotos() async {
         guard hasBlockingValidation == false else {
-            statusMessage = NSLocalizedString("settings.fixErrorsFirst", comment: "Fix errors first")
+            statusMessage = AppLocalization.string("settings.fixErrorsFirst")
             return
         }
 
@@ -228,7 +227,7 @@ final class SettingsViewModel {
             let output = try generatorService.generate(content: generatedContent(), settings: settings)
             try await photoAlbumSaver.savePNGData(output.pngData, albumName: settings.photoAlbumName)
             statusMessage = String.localizedStringWithFormat(
-                NSLocalizedString("settings.savePreviewSuccess", comment: "Preview saved"),
+                AppLocalization.string("settings.savePreviewSuccess"),
                 settings.photoAlbumName
             )
         } catch {
@@ -236,43 +235,10 @@ final class SettingsViewModel {
         }
     }
 
-    private func applyPasteboardContent(force: Bool) {
-        let pasteboard = UIPasteboard.general
-        let changeCount = pasteboard.changeCount
-        if force == false, lastSeenPasteboardChangeCount == changeCount {
-            return
-        }
-        lastSeenPasteboardChangeCount = changeCount
-
-        guard let pastedText = pasteboardCandidate(from: pasteboard) else {
-            return
-        }
-
-        let trimmedPastedText = pastedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmedPastedText.isEmpty == false else {
-            return
-        }
-
-        contentDraft.clipboardText = trimmedPastedText
-
-        let trimmedSampleText = sampleText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let canReplaceCurrentText =
-            trimmedSampleText.isEmpty ||
-            sampleText == QRCodeSettings.defaultSampleText ||
-            sampleText == lastAppliedPasteboardText
-
-        guard canReplaceCurrentText else {
-            return
-        }
-
-        sampleText = trimmedPastedText
-        lastAppliedPasteboardText = trimmedPastedText
-    }
-
     private func generatedContent() throws -> String {
         switch contentDraft.kind {
         case .website:
-            throw GenerateContentError.websiteNotImplemented
+            return try websitePayload()
         case .contact:
             guard let contact = contentDraft.contact else {
                 throw GenerateContentError.contactMissing
@@ -289,14 +255,6 @@ final class SettingsViewModel {
                 throw GenerateContentError.wifiPasswordMissing
             }
             return wifiPayload()
-        case .text:
-            return sampleText
-        case .clipboard:
-            let clipboardText = contentDraft.clipboardText.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard clipboardText.isEmpty == false else {
-                throw GenerateContentError.clipboardEmpty
-            }
-            return clipboardText
         case .email:
             let recipient = contentDraft.emailTo.trimmingCharacters(in: .whitespacesAndNewlines)
             guard recipient.isEmpty == false else {
@@ -327,6 +285,32 @@ final class SettingsViewModel {
         case .location:
             return try locationPayload()
         }
+    }
+
+    private func websitePayload() throws -> String {
+        let trimmedValue = contentDraft.websiteURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedValue.isEmpty == false else {
+            throw GenerateContentError.websiteURLMissing
+        }
+
+        let candidateValue: String
+        if trimmedValue.contains("://") {
+            candidateValue = trimmedValue
+        } else {
+            candidateValue = "https://\(trimmedValue)"
+        }
+
+        guard let components = URLComponents(string: candidateValue),
+              let scheme = components.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              let host = components.host?.trimmingCharacters(in: .whitespacesAndNewlines),
+              host.isEmpty == false,
+              let url = components.url
+        else {
+            throw GenerateContentError.websiteURLInvalid
+        }
+
+        return url.absoluteString
     }
 
     private func wifiPayload() -> String {
@@ -429,7 +413,7 @@ final class SettingsViewModel {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .nonEmpty
             ?? contact.organizationName.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
-            ?? NSLocalizedString("generate.contactFallback", comment: "Contact fallback")
+            ?? AppLocalization.string("generate.contactFallback")
 
         return GenerateSelectedContact(
             displayName: displayName,
@@ -453,16 +437,6 @@ final class SettingsViewModel {
             image.draw(in: CGRect(origin: .zero, size: targetSize))
         }
         return renderedImage.pngData()
-    }
-
-    private func pasteboardCandidate(from pasteboard: UIPasteboard) -> String? {
-        if let url = pasteboard.url?.absoluteString {
-            return url
-        }
-        if let string = pasteboard.string {
-            return string
-        }
-        return nil
     }
 
     private func escapedWiFiValue(_ value: String) -> String {
