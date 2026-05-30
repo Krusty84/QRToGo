@@ -110,11 +110,6 @@ struct GenerateView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("tab.generate")
-            .simultaneousGesture(
-                TapGesture().onEnded {
-                    focusedField = nil
-                }
-            )
         }
         .sheet(isPresented: $isContactPickerPresented) {
             ContactPickerView(
@@ -160,6 +155,17 @@ struct GenerateView: View {
             .focused($focusedField, equals: .websiteURL)
     }
 
+    private var wifiSecurityBinding: Binding<GenerateWiFiSecurity> {
+        Binding(
+            get: {
+                viewModel.contentDraft.wifiSecurity
+            },
+            set: { newValue in
+                viewModel.setWiFiSecurity(newValue)
+            }
+        )
+    }
+
     private var contactEditor: some View {
         VStack(alignment: .leading, spacing: 12) {
             Button("generate.contactPick", systemImage: "person.crop.circle.badge.plus") {
@@ -186,7 +192,7 @@ struct GenerateView: View {
                 .autocorrectionDisabled()
                 .focused($focusedField, equals: .wifiSSID)
 
-            Picker("generate.wifiSecurity", selection: $viewModel.contentDraft.wifiSecurity) {
+            Picker("generate.wifiSecurity", selection: wifiSecurityBinding) {
                 ForEach(GenerateWiFiSecurity.allCases) { security in
                     Text(LocalizedStringKey(security.titleKey)).tag(security)
                 }

@@ -36,6 +36,13 @@ final class GenerateViewModel {
         contentDraft.kind = kind
     }
 
+    func setWiFiSecurity(_ security: GenerateWiFiSecurity) {
+        contentDraft.wifiSecurity = security
+        if security == .none {
+            contentDraft.wifiPassword = ""
+        }
+    }
+
     func refreshPreview(using settings: QRCodeSettings) {
         previewTask?.cancel()
         previewErrorMessage = nil
@@ -204,8 +211,14 @@ final class GenerateViewModel {
 
     private func wifiPayload() -> String {
         let ssid = escapedWiFiValue(contentDraft.wifiSSID)
+        let hiddenValue = contentDraft.wifiIsHidden ? "true" : "false"
+
+        if contentDraft.wifiSecurity == .none {
+            return "WIFI:T:\(contentDraft.wifiSecurity.payloadValue);S:\(ssid);H:\(hiddenValue);;"
+        }
+
         let password = escapedWiFiValue(contentDraft.wifiPassword)
-        return "WIFI:T:\(contentDraft.wifiSecurity.payloadValue);S:\(ssid);P:\(password);H:\(contentDraft.wifiIsHidden ? "true" : "false");;"
+        return "WIFI:T:\(contentDraft.wifiSecurity.payloadValue);S:\(ssid);P:\(password);H:\(hiddenValue);;"
     }
 
     private func emailPayload(for recipient: String) -> String {

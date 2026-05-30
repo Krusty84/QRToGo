@@ -144,11 +144,6 @@ struct SettingsView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("tab.settings")
-            .simultaneousGesture(
-                TapGesture().onEnded {
-                    isAlbumNameFocused = false
-                }
-            )
         }
         .onChange(of: selectedIconItem) { _, newItem in
             Task {
