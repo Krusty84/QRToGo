@@ -125,10 +125,9 @@
 "share.contactFallback" = "Contact";
 "share.done" = "Done";
 "share.loading" = "Reading shared content…";
-"share.preview" = "QR preview";
 "share.save" = "Save to Photos";
 "share.saveSuccess" = "Saved to %@.";
-"share.title" = "Generate QR Code";
+"share.title" = "Generated QR Code";
 "tab.about" = "About";
 "tab.generate" = "Generate";
 "tab.settings" = "Settings";

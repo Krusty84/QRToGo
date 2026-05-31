@@ -119,14 +119,15 @@ final class GenerateViewModel {
         do {
             let normalizedSettings = settings.normalized()
             let createdAt = Date.now
+            let payload = try generatedContent()
             let output = try generatorService.generate(
-                content: generatedContent(),
+                content: payload,
                 settings: normalizedSettings
             )
             let searchMetadata = exportSearchMetadata(createdAt: createdAt)
             let cardOutput = try exportCardRenderer.render(
                 qrImage: output.image,
-                metadata: exportCardMetadata(createdAt: createdAt),
+                metadata: exportCardMetadata(createdAt: createdAt, payload: payload),
                 searchMetadata: searchMetadata
             )
             try await photoAlbumSaver.savePNGData(
@@ -143,12 +144,16 @@ final class GenerateViewModel {
         }
     }
 
-    private func exportCardMetadata(createdAt: Date) -> QRCodeExportCardMetadata {
+    private func exportCardMetadata(
+        createdAt: Date,
+        payload: String
+    ) -> QRCodeExportCardMetadata {
         let safeSummary = exportSafeSummary()
         return QRCodeExportCardMetadata(
             title: AppLocalization.string("export.card.title"),
             titleTypeText: AppLocalization.string(contentDraft.kind.titleKey),
             titleIconSystemName: contentDraft.kind.systemImage,
+            density: exportDensity(for: payload),
             detailLine: safeSummary.detailValue.map {
                 QRCodeExportCardLine(
                     label: AppLocalization.string(safeSummary.detailLabelKey),
@@ -170,6 +175,36 @@ final class GenerateViewModel {
                 )
             },
         )
+    }
+
+    private func exportDensity(for payload: String) -> QRCodeExportCardDensity {
+        if contentDraft.kind == .contact {
+            return .dense
+        }
+
+        if contentDraft.kind == .email, contentDraft.emailBody.nonEmpty != nil {
+            return payload.count <= 240 ? .normal : .dense
+        }
+
+        if contentDraft.kind == .sms, contentDraft.smsBody.nonEmpty != nil {
+            return payload.count <= 240 ? .normal : .dense
+        }
+
+        if contentDraft.kind == .event,
+           contentDraft.eventLocation.nonEmpty != nil || contentDraft.eventNotes.nonEmpty != nil
+        {
+            return payload.count <= 240 ? .normal : .dense
+        }
+
+        if payload.count <= 120 {
+            return .compact
+        }
+
+        if payload.count <= 240 {
+            return .normal
+        }
+
+        return .dense
     }
 
     private func exportSearchMetadata(createdAt: Date) -> QRCodeExportCardSearchMetadata {

@@ -62,14 +62,30 @@ struct ShareRootView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("share.preview")
-                                .font(.headline)
-
-                            QRPreviewView(
-                                image: viewModel.previewImage,
-                                isLoading: viewModel.isGeneratingPreview,
-                                errorMessage: viewModel.previewErrorMessage
-                            )
+                            
+                            if viewModel.isGeneratingPreview {
+                                HStack {
+                                    Spacer()
+                                    ProgressView()
+                                        .controlSize(.large)
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 220)
+                            } else if let previewImage = viewModel.previewImage {
+                                Image(uiImage: previewImage)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxWidth: .infinity)
+                                    .accessibilityLabel(Text("share.preview"))
+                            } else {
+                                ContentUnavailableView(
+                                    AppLocalization.string("settings.previewUnavailable"),
+                                    systemImage: "qrcode",
+                                    description: viewModel.previewErrorMessage.map { Text(verbatim: $0) }
+                                )
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 24)
+                            }
                         }
 
                         if viewModel.validationResults.isEmpty == false {
@@ -119,6 +135,7 @@ struct ShareRootView: View {
                     }
                     .buttonStyle(.bordered)
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .padding(20)

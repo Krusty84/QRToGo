@@ -9,10 +9,17 @@ import ImageIO
 import UniformTypeIdentifiers
 import UIKit
 
+enum QRCodeExportCardDensity {
+    case compact
+    case normal
+    case dense
+}
+
 struct QRCodeExportCardMetadata {
     let title: String
     let titleTypeText: String
     let titleIconSystemName: String?
+    let density: QRCodeExportCardDensity
     let detailLine: QRCodeExportCardLine?
     let typeLine: QRCodeExportCardLine
     let createdLine: QRCodeExportCardLine
@@ -55,7 +62,7 @@ struct QRCodeExportCardRenderer {
 
             if let detailLine = metadata.detailLine, let detailLineRect = layout.detailLineRect {
                 drawAttributedText(
-                    attributedLine(for: detailLine, alignment: .left, layout: layout),
+                    attributedLine(for: detailLine, alignment: .center, layout: layout),
                     in: detailLineRect
                 )
             }
@@ -140,7 +147,12 @@ struct QRCodeExportCardRenderer {
         if let iconImage = titleIconImage(systemName: metadata.titleIconSystemName, layout: layout) {
             let attachment = NSTextAttachment()
             attachment.image = iconImage
-            attachment.bounds = CGRect(x: 0, y: -4, width: 28, height: 28)
+            attachment.bounds = CGRect(
+                x: 0,
+                y: layout.titleIconVerticalOffset,
+                width: layout.titleIconSize,
+                height: layout.titleIconSize
+            )
             title.append(NSAttributedString(attachment: attachment))
             title.append(
                 NSAttributedString(
@@ -176,7 +188,7 @@ struct QRCodeExportCardRenderer {
             return nil
         }
         let configuration = UIImage.SymbolConfiguration(
-            pointSize: layout.titleAccessoryFont.pointSize,
+            pointSize: layout.titleIconSize,
             weight: .semibold
         )
         return UIImage(systemName: systemName, withConfiguration: configuration)?
@@ -304,12 +316,14 @@ private struct QRCodeExportCardLayout {
     let primaryTextColor = UIColor(red: 0.11, green: 0.12, blue: 0.16, alpha: 1)
     let secondaryTextColor = UIColor(red: 0.38, green: 0.42, blue: 0.50, alpha: 1)
 
-    let titleFont = UIFont.systemFont(ofSize: 52, weight: .semibold)
-    let titleAccessoryFont = UIFont.systemFont(ofSize: 34, weight: .semibold)
+    let titleFont = UIFont.systemFont(ofSize: 48, weight: .bold)
+    let titleAccessoryFont = UIFont.systemFont(ofSize: 48, weight: .semibold)
     let infoLabelFont = UIFont.systemFont(ofSize: 24, weight: .semibold)
     let infoValueFont = UIFont.systemFont(ofSize: 28, weight: .regular)
 
     let infoCardCornerRadius: CGFloat = 34
+    var titleIconSize: CGFloat { 44 }
+    var titleIconVerticalOffset: CGFloat { -6 }
 
     init(metadata: QRCodeExportCardMetadata) {
         let canvasWidth: CGFloat = 1080
@@ -338,13 +352,13 @@ private struct QRCodeExportCardLayout {
                 x: horizontalPadding,
                 y: titleRect.maxY + titleDetailSpacing,
                 width: contentWidth,
-                height: ceil(infoValueFont.lineHeight)
+                height: ceil(max(infoLabelFont.lineHeight, infoValueFont.lineHeight))
             ).integral
             qrOriginY = detailLineRect!.maxY
         }
         qrOriginY += detailQRSpacing
 
-        let qrSize = min(contentWidth, 680)
+        let qrSize = Self.qrSize(for: metadata.density, contentWidth: contentWidth)
         let qrRect = CGRect(
             x: (canvasWidth - qrSize) / 2,
             y: qrOriginY,
@@ -404,5 +418,19 @@ private struct QRCodeExportCardLayout {
         self.typeLineRect = typeLineRect
         self.createdLineRect = createdLineRect
         self.purposeLineRect = purposeLineRect
+    }
+
+    private static func qrSize(
+        for density: QRCodeExportCardDensity,
+        contentWidth: CGFloat
+    ) -> CGFloat {
+        switch density {
+        case .compact:
+            min(contentWidth, 820)
+        case .normal:
+            min(contentWidth, 740)
+        case .dense:
+            min(contentWidth, 680)
+        }
     }
 }

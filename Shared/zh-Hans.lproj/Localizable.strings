@@ -125,7 +125,6 @@
 "share.contactFallback" = "联系人";
 "share.done" = "完成";
 "share.loading" = "正在读取共享内容…";
-"share.preview" = "二维码预览";
 "share.save" = "保存到“照片”";
 "share.saveSuccess" = "已保存到 %@。";
 "share.title" = "生成二维码";

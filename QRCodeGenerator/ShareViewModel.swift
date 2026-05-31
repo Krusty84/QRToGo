@@ -30,7 +30,8 @@ final class ShareViewModel {
 
     private var hasLoaded = false
     private var settings = QRCodeSettings.defaults
-    private var renderedOutput: QRCodeRenderOutput?
+    private var renderedExportCardOutput: QRCodeRenderOutput?
+    private var renderedExportOriginalFilename: String?
 
     init(
         extensionContext: NSExtensionContext?,
@@ -80,29 +81,22 @@ final class ShareViewModel {
         isSaving = true
         defer { isSaving = false }
 
-        await regeneratePreview()
+        if renderedExportCardOutput == nil || renderedExportOriginalFilename == nil {
+            await regeneratePreview()
+        }
 
         do {
-            guard let candidate = selectedCandidate else {
+            guard
+                let cardOutput = renderedExportCardOutput,
+                let originalFilename = renderedExportOriginalFilename
+            else {
                 return
             }
-            let createdAt = Date.now
             let normalizedSettings = settings.normalized()
-            let output = try generatorService.generate(
-                content: candidate.content,
-                settings: normalizedSettings
-            )
-            let summary = exportSafeSummary(for: candidate)
-            let searchMetadata = exportSearchMetadata(for: summary, createdAt: createdAt)
-            let cardOutput = try exportCardRenderer.render(
-                qrImage: output.image,
-                metadata: exportCardMetadata(for: summary, createdAt: createdAt),
-                searchMetadata: searchMetadata
-            )
             try await photoAlbumSaver.savePNGData(
                 cardOutput.pngData,
                 albumName: normalizedSettings.photoAlbumName,
-                originalFilename: searchMetadata.originalFilename
+                originalFilename: originalFilename
             )
             statusMessage = String.localizedStringWithFormat(
                 AppLocalization.string("share.saveSuccess"),
@@ -126,7 +120,8 @@ final class ShareViewModel {
         guard let candidate = selectedCandidate else {
             previewImage = nil
             previewErrorMessage = AppLocalization.string("error.noCandidateSelected")
-            renderedOutput = nil
+            renderedExportCardOutput = nil
+            renderedExportOriginalFilename = nil
             return
         }
 
@@ -135,18 +130,32 @@ final class ShareViewModel {
         defer { isGeneratingPreview = false }
 
         do {
-            let output = try generatorService.generate(
+            let normalizedSettings = settings.normalized()
+            let createdAt = Date.now
+            let qrOutput = try generatorService.generate(
                 content: candidate.content,
-                settings: settings,
-                outputSize: min(max(settings.outputSize, 360), 768)
+                settings: normalizedSettings
             )
-            previewImage = output.image
+            let summary = exportSafeSummary(for: candidate)
+            let searchMetadata = exportSearchMetadata(for: summary, createdAt: createdAt)
+            let cardOutput = try exportCardRenderer.render(
+                qrImage: qrOutput.image,
+                metadata: exportCardMetadata(
+                    for: summary,
+                    candidate: candidate,
+                    createdAt: createdAt
+                ),
+                searchMetadata: searchMetadata
+            )
+            previewImage = cardOutput.image
             previewErrorMessage = nil
-            renderedOutput = output
+            renderedExportCardOutput = cardOutput
+            renderedExportOriginalFilename = searchMetadata.originalFilename
         } catch {
             previewImage = nil
             previewErrorMessage = error.localizedDescription
-            renderedOutput = nil
+            renderedExportCardOutput = nil
+            renderedExportOriginalFilename = nil
         }
     }
 
@@ -162,12 +171,14 @@ final class ShareViewModel {
 
     private func exportCardMetadata(
         for summary: ShareExportSafeSummary,
+        candidate: SharedInputCandidate,
         createdAt: Date
     ) -> QRCodeExportCardMetadata {
         QRCodeExportCardMetadata(
             title: AppLocalization.string("export.card.title"),
             titleTypeText: summary.typeText,
             titleIconSystemName: summary.iconSystemName,
+            density: exportDensity(for: candidate),
             detailLine: summary.detailValue.map {
                 QRCodeExportCardLine(
                     label: AppLocalization.string(summary.detailLabelKey),
@@ -189,6 +200,22 @@ final class ShareViewModel {
                 )
             }
         )
+    }
+
+    private func exportDensity(for candidate: SharedInputCandidate) -> QRCodeExportCardDensity {
+        if candidate.kind == .contact {
+            return .dense
+        }
+
+        if candidate.content.count <= 120 {
+            return .compact
+        }
+
+        if candidate.content.count <= 240 {
+            return .normal
+        }
+
+        return .dense
     }
 
     private func exportSearchMetadata(
