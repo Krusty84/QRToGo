@@ -39,28 +39,6 @@ struct ShareRootView: View {
                             .pickerStyle(.menu)
                         }
 
-                        if let candidate = viewModel.selectedCandidate {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Label {
-                                    Text(LocalizedStringKey(candidate.kind.titleKey))
-                                } icon: {
-                                    Image(systemName: systemImage(for: candidate.kind))
-                                }
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                                if let sourceTitle = candidate.sourceTitle {
-                                    Text(verbatim: sourceTitle)
-                                        .font(.headline)
-                                }
-
-                                Text(verbatim: candidate.previewValue)
-                                    .font(.subheadline)
-                                    .lineLimit(3)
-                                    .truncationMode(.middle)
-                            }
-                        }
-
                         VStack(alignment: .leading, spacing: 10) {
                             
                             if viewModel.isGeneratingPreview {
@@ -130,7 +108,7 @@ struct ShareRootView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(viewModel.isSaving || viewModel.previewImage == nil)
 
-                    Button("share.done") {
+                    Button("share.close") {
                         viewModel.completeRequest()
                     }
                     .buttonStyle(.bordered)
@@ -156,19 +134,7 @@ struct ShareRootView: View {
             }
         )
     }
-
-    private func systemImage(for kind: SharedInputCandidate.Kind) -> String {
-        switch kind {
-        case .webURL:
-            "globe"
-        case .telegramLink:
-            "paperplane"
-        case .remoteFileURL:
-            "link"
-        case .contact:
-            "person.crop.circle"
-        }
-    }
+    
 }
 
 #Preview {

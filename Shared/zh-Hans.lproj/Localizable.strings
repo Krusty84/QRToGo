@@ -1,7 +1,7 @@
 "candidate.kind.contact" = "联系人";
 "candidate.kind.remoteFileURL" = "远程文件链接";
 "candidate.kind.telegramLink" = "Telegram 链接";
-"candidate.kind.webURL" = "网页链接";
+"candidate.kind.webURL" = "网站";
 "error.appGroupUnavailable" = "共享 App Group 容器不可用。";
 "error.emptyContent" = "没有可编码的内容。";
 "error.exportData" = "无法导出二维码图像。";
@@ -82,7 +82,7 @@
 "export.card.created" = "创建时间";
 "export.card.details" = "详情";
 "export.card.purpose" = "用途";
-"export.card.title" = "QRToGO";
+"export.card.title" = "QR2Go";
 "export.card.type" = "类型";
 "settings.albumName" = "相簿名称";
 "settings.appLanguage" = "应用语言";
@@ -102,14 +102,14 @@
 "settings.resetDone" = "已恢复默认设置。";
 "settings.save" = "保存设置";
 "settings.saved" = "设置已保存。";
-"settings.savePreview" = "将二维码卡片保存到“照片”";
-"settings.savePreviewSuccess" = "二维码卡片已保存到 %@。";
+"settings.savePreview" = "保存到“照片”";
+"settings.savePreviewSuccess" = "已保存到 %@。";
 "settings.scannability" = "可扫描性";
 "settings.scannability.safe" = "当前设置看起来适合扫描。";
 "settings.section.language" = "语言";
 "settings.section.colors" = "颜色";
 "settings.section.export" = "导出";
-"settings.section.preview" = "内容预览";
+"settings.section.preview" = "二维码预览";
 "settings.section.readability" = "可读性";
 "settings.section.visualStyle" = "视觉样式";
 "settings.staticImageMode" = "静态图像模式";
@@ -123,7 +123,8 @@
 "share.candidatePicker" = "检测到的内容";
 "share.cancel" = "取消";
 "share.contactFallback" = "联系人";
-"share.done" = "完成";
+"share.close" = "关闭";
+"share.preview" = "二维码预览";
 "share.loading" = "正在读取共享内容…";
 "share.save" = "保存到“照片”";
 "share.saveSuccess" = "已保存到 %@。";
