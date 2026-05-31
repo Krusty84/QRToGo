@@ -45,6 +45,8 @@
 "generate.contactPick" = "选择联系人";
 "generate.contactPlaceholder" = "从通讯录中选择联系人。";
 "generate.contactRemove" = "移除联系人";
+"generate.exportPurpose" = "保存图片说明";
+"generate.exportPurposeFooter" = "保存到“照片”时，这段说明会显示在二维码下方。";
 "generate.emailBody" = "邮件正文";
 "generate.emailRecipient" = "电子邮箱收件人";
 "generate.emailSubject" = "邮件主题";
@@ -76,6 +78,12 @@
 "generate.wifiPassword" = "密码";
 "generate.wifiSecurity" = "安全类型";
 "generate.wifiSSID" = "网络名称 (SSID)";
+"export.card.address" = "地址";
+"export.card.created" = "创建时间";
+"export.card.details" = "详情";
+"export.card.purpose" = "用途";
+"export.card.title" = "QRToGO";
+"export.card.type" = "类型";
 "settings.albumName" = "相簿名称";
 "settings.appLanguage" = "应用语言";
 "settings.backgroundColor" = "背景颜色";
@@ -94,8 +102,8 @@
 "settings.resetDone" = "已恢复默认设置。";
 "settings.save" = "保存设置";
 "settings.saved" = "设置已保存。";
-"settings.savePreview" = "将预览保存到“照片”";
-"settings.savePreviewSuccess" = "预览已保存到 %@。";
+"settings.savePreview" = "将二维码卡片保存到“照片”";
+"settings.savePreviewSuccess" = "二维码卡片已保存到 %@。";
 "settings.scannability" = "可扫描性";
 "settings.scannability.safe" = "当前设置看起来适合扫描。";
 "settings.section.language" = "语言";

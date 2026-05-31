@@ -7,6 +7,7 @@
 
 import Foundation
 import Photos
+import UniformTypeIdentifiers
 
 enum PhotoAlbumSaverError: LocalizedError {
     case permissionDenied
@@ -26,7 +27,11 @@ enum PhotoAlbumSaverError: LocalizedError {
 }
 
 struct PhotoAlbumSaver {
-    func savePNGData(_ data: Data, albumName: String) async throws {
+    func savePNGData(
+        _ data: Data,
+        albumName: String,
+        originalFilename: String? = nil
+    ) async throws {
         let albumName = resolvedAlbumName(from: albumName)
         let status = await requestAuthorizationStatus()
         guard status == .authorized || status == .limited else {
@@ -34,7 +39,10 @@ struct PhotoAlbumSaver {
         }
 
         let albumIdentifier = try await findOrCreateAlbumIdentifier(named: albumName)
-        let assetIdentifier = try await createAssetIdentifier(with: data)
+        let assetIdentifier = try await createAssetIdentifier(
+            with: data,
+            originalFilename: originalFilename
+        )
         try await addAsset(identifier: assetIdentifier, toAlbumIdentifier: albumIdentifier)
     }
 
@@ -65,12 +73,18 @@ struct PhotoAlbumSaver {
         }
     }
 
-    private func createAssetIdentifier(with data: Data) async throws -> String {
+    private func createAssetIdentifier(
+        with data: Data,
+        originalFilename: String?
+    ) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             var placeholder: PHObjectPlaceholder?
             PHPhotoLibrary.shared().performChanges({
                 let request = PHAssetCreationRequest.forAsset()
-                request.addResource(with: .photo, data: data, options: nil)
+                let options = PHAssetResourceCreationOptions()
+                options.uniformTypeIdentifier = UTType.png.identifier
+                options.originalFilename = originalFilename
+                request.addResource(with: .photo, data: data, options: options)
                 placeholder = request.placeholderForCreatedAsset
             }, completionHandler: { success, error in
                 if success, let identifier = placeholder?.localIdentifier {

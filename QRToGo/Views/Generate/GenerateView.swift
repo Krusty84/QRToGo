@@ -52,6 +52,15 @@ struct GenerateView: View {
 
                 Section("generate.section.content") {
                     contentEditor
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("generate.exportPurpose", text: $viewModel.exportPurposeDraft, axis: .vertical)
+                            .lineLimit(3, reservesSpace: true)
+
+                        Text("generate.exportPurposeFooter")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Section("settings.section.preview") {

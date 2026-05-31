@@ -45,6 +45,8 @@
 "generate.contactPick" = "Choose contact";
 "generate.contactPlaceholder" = "Choose a contact from your address book.";
 "generate.contactRemove" = "Remove contact";
+"generate.exportPurpose" = "Purpose / note for saved image";
+"generate.exportPurposeFooter" = "This note is printed under the QR code when you save it to Photos.";
 "generate.emailBody" = "Email body";
 "generate.emailRecipient" = "Email recipient";
 "generate.emailSubject" = "Email subject";
@@ -76,6 +78,12 @@
 "generate.wifiPassword" = "Password";
 "generate.wifiSecurity" = "Security";
 "generate.wifiSSID" = "Network name (SSID)";
+"export.card.address" = "Address";
+"export.card.created" = "Created";
+"export.card.details" = "Details";
+"export.card.purpose" = "Purpose";
+"export.card.title" = "QRToGO";
+"export.card.type" = "Type";
 "settings.albumName" = "Album name";
 "settings.appLanguage" = "App language";
 "settings.backgroundColor" = "Background color";
@@ -94,8 +102,8 @@
 "settings.resetDone" = "Defaults restored.";
 "settings.save" = "Save settings";
 "settings.saved" = "Settings saved.";
-"settings.savePreview" = "Save QR to Photos";
-"settings.savePreviewSuccess" = "QR saved to %@.";
+"settings.savePreview" = "Save QR Card to Photos";
+"settings.savePreviewSuccess" = "QR card saved to %@.";
 "settings.scannability" = "Scannability";
 "settings.scannability.safe" = "Current settings look scan-safe.";
 "settings.section.language" = "Language";
