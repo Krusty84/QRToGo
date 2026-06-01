@@ -46,6 +46,7 @@ enum QRCodeGeneratorError: LocalizedError {
 
 struct QRCodeGeneratorService {
     func validationResults(for settings: QRCodeSettings) -> [QRValidationResult] {
+        let settings = settings.normalized()
         var results: [QRValidationResult] = []
         let contrast = contrastRatio(
             between: settings.foregroundColor.uiColor,
@@ -116,6 +117,7 @@ struct QRCodeGeneratorService {
             throw QRCodeGeneratorError.emptyContent
         }
 
+        let settings = settings.normalized()
         let finalPixelSize = max(outputSize ?? settings.outputSize, 256)
         let effectPadding = settings.visualEffect == .none ? 0 : max(Int(Double(finalPixelSize) * 0.06), 28)
         let qrPixelSize = max(finalPixelSize - (effectPadding * 2), 256)

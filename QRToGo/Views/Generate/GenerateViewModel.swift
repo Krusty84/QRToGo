@@ -52,7 +52,7 @@ final class GenerateViewModel {
         previewErrorMessage = nil
         isGeneratingPreview = true
 
-        let previewSettings = settings
+        let previewSettings = settings.normalized()
         let previewSize = min(max(previewSettings.outputSize, 360), 768)
         let content: String
 

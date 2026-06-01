@@ -13,9 +13,15 @@ struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
     @State private var selectedIconItem: PhotosPickerItem?
     @State private var selectedStaticImageItem: PhotosPickerItem?
+    @State private var pendingCropImage: UIImage?
+    @State private var pendingCropTarget: PendingImageCropTarget?
+    @State private var isCropSheetPresented = false
     @FocusState private var isAlbumNameFocused: Bool
 
-    private let outputSizes = [512, 768, 1024, 1536]
+    private enum PendingImageCropTarget {
+        case staticImage
+        case centerIcon
+    }
 
     var body: some View {
         NavigationStack {
@@ -25,38 +31,12 @@ struct SettingsView: View {
                     ColorPicker("settings.backgroundColor", selection: backgroundColorBinding, supportsOpacity: false)
                 }
 
-                Section("settings.section.readability") {
-                    Picker("settings.errorCorrection", selection: $viewModel.draftSettings.errorCorrectionLevel) {
-                        ForEach(QRCodeErrorCorrectionLevel.allCases) { level in
-                            Text(LocalizedStringKey(level.titleKey)).tag(level)
-                        }
-                    }
-
-                    Picker("settings.outputSize", selection: $viewModel.draftSettings.outputSize) {
-                        ForEach(outputSizes, id: \.self) { size in
-                            Text("\(size) px").tag(size)
-                        }
-                    }
-
-                    Picker("settings.quietZone", selection: $viewModel.draftSettings.quietZone) {
-                        ForEach(QRQuietZonePreset.allCases) { preset in
-                            Text(LocalizedStringKey(preset.titleKey)).tag(preset)
-                        }
-                    }
-                }
-
-                Section("settings.section.visualStyle") {
-                    Toggle("settings.staticImageMode", isOn: staticImageModeBinding)
+                Section("settings.section.style") {
+                    Toggle("settings.styleImageEnabled", isOn: staticImageModeBinding)
                         .disabled(viewModel.draftSettings.centerIconEnabled)
 
                     Toggle("settings.centerIconEnabled", isOn: centerLogoEnabledBinding)
                         .disabled(viewModel.draftSettings.generationMode == .staticImage)
-
-                    Picker("settings.moduleStyle", selection: $viewModel.draftSettings.moduleStyle) {
-                        ForEach(QRModuleStyle.allCases) { style in
-                            Text(LocalizedStringKey(style.titleKey)).tag(style)
-                        }
-                    }
 
                     if viewModel.draftSettings.generationMode == .staticImage {
                         PhotosPicker(selection: $selectedStaticImageItem, matching: .images) {
@@ -65,7 +45,7 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
 
                         if staticImagePreview != nil {
-                            Button("settings.staticImageRemove", role: .destructive) {
+                            Button("settings.styleImageRemove", role: .destructive) {
                                 viewModel.removeStaticImage()
                             }
                         }
@@ -82,23 +62,6 @@ struct SettingsView: View {
                                 viewModel.removeCenterIcon()
                             }
                         }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("settings.centerIconScale")
-                                Spacer()
-                                Text(viewModel.draftSettings.centerIconScale.formatted(.percent.precision(.fractionLength(0))))
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Slider(value: $viewModel.draftSettings.centerIconScale, in: 0.12...0.24, step: 0.01)
-                        }
-                    }
-
-                    Picker("settings.visualEffect", selection: $viewModel.draftSettings.visualEffect) {
-                        ForEach(QRVisualEffect.allCases) { effect in
-                            Text(LocalizedStringKey(effect.titleKey)).tag(effect)
-                        }
                     }
                 }
 
@@ -112,7 +75,7 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                
+
                 Section("settings.section.export") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("settings.albumName")
@@ -153,6 +116,16 @@ struct SettingsView: View {
         .onChange(of: selectedStaticImageItem) { _, newItem in
             Task {
                 await loadStaticImage(from: newItem)
+            }
+        }
+        .sheet(isPresented: $isCropSheetPresented, onDismiss: clearPendingCrop) {
+            if let pendingCropImage {
+                ImageCropView(
+                    image: pendingCropImage,
+                    outputSize: pendingCropOutputSize,
+                    onCancel: cancelCrop,
+                    onUseImage: applyCroppedImage
+                )
             }
         }
     }
@@ -229,6 +202,15 @@ struct SettingsView: View {
         return UIImage(data: data)
     }
 
+    private var pendingCropOutputSize: Int {
+        switch pendingCropTarget {
+        case .staticImage:
+            1400
+        case .centerIcon, nil:
+            512
+        }
+    }
+
     @ViewBuilder
     private var centerLogoPickerContent: some View {
         if let centerLogoImage {
@@ -279,7 +261,7 @@ struct SettingsView: View {
                 }
         } else {
             ContentUnavailableView(
-                "settings.staticImagePick",
+                "settings.styleImagePick",
                 systemImage: "photo.on.rectangle.angled"
             )
             .frame(maxWidth: .infinity)
@@ -296,7 +278,12 @@ struct SettingsView: View {
 
         do {
             let data = try await item.loadTransferable(type: Data.self)
-            viewModel.setCenterIconData(data)
+            guard let data, let image = UIImage(data: data) else {
+                viewModel.statusMessage = AppLocalization.string("error.iconDecode")
+                selectedIconItem = nil
+                return
+            }
+            presentCrop(for: image, target: .centerIcon)
         } catch {
             viewModel.statusMessage = error.localizedDescription
         }
@@ -312,11 +299,45 @@ struct SettingsView: View {
 
         do {
             let data = try await item.loadTransferable(type: Data.self)
-            viewModel.setStaticImageData(data)
+            guard let data, let image = UIImage(data: data) else {
+                viewModel.statusMessage = AppLocalization.string("error.staticImageDecode")
+                selectedStaticImageItem = nil
+                return
+            }
+            presentCrop(for: image, target: .staticImage)
         } catch {
             viewModel.statusMessage = error.localizedDescription
         }
 
+        selectedStaticImageItem = nil
+    }
+
+    private func presentCrop(for image: UIImage, target: PendingImageCropTarget) {
+        pendingCropImage = image
+        pendingCropTarget = target
+        isCropSheetPresented = true
+    }
+
+    private func applyCroppedImage(_ data: Data) {
+        switch pendingCropTarget {
+        case .staticImage:
+            viewModel.setStaticImageData(data)
+        case .centerIcon:
+            viewModel.setCenterIconData(data)
+        case nil:
+            break
+        }
+        isCropSheetPresented = false
+    }
+
+    private func cancelCrop() {
+        isCropSheetPresented = false
+    }
+
+    private func clearPendingCrop() {
+        pendingCropImage = nil
+        pendingCropTarget = nil
+        selectedIconItem = nil
         selectedStaticImageItem = nil
     }
 }

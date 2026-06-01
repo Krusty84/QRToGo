@@ -148,7 +148,7 @@ struct QRCodeSettings: Codable, Equatable {
             foregroundColor: QRColor(red: 0, green: 0, blue: 0),
             backgroundColor: QRColor(red: 1, green: 1, blue: 1),
             errorCorrectionLevel: .high,
-            outputSize: 768,
+            outputSize: 1024,
             quietZone: .normal,
             moduleStyle: .square,
             staticImageData: nil,
@@ -160,6 +160,10 @@ struct QRCodeSettings: Codable, Equatable {
             createdAt: nil,
             updatedAt: nil
         )
+    }
+
+    static var automaticScanSafeDefaults: QRCodeSettings {
+        defaults
     }
 
     init(
@@ -220,6 +224,12 @@ struct QRCodeSettings: Codable, Equatable {
 
     func normalized() -> QRCodeSettings {
         var copy = self
+        copy.errorCorrectionLevel = Self.automaticScanSafeDefaults.errorCorrectionLevel
+        copy.outputSize = Self.automaticScanSafeDefaults.outputSize
+        copy.quietZone = Self.automaticScanSafeDefaults.quietZone
+        copy.moduleStyle = Self.automaticScanSafeDefaults.moduleStyle
+        copy.centerIconScale = Self.automaticScanSafeDefaults.centerIconScale
+        copy.visualEffect = Self.automaticScanSafeDefaults.visualEffect
         if copy.generationMode == .staticImage {
             copy.centerIconEnabled = false
         }
