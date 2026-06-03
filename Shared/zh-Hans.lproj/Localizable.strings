@@ -25,9 +25,6 @@
 "error.photoSave" = "无法将二维码保存到“照片”。";
 "error.previewGenerate" = "无法生成二维码预览。";
 "error.scanValidationFailed" = "无法把这个二维码调整到易于扫描。请尝试更简单的内容或更清晰的颜色。";
-"error.watermarkImageDecode" = "无法加载所选水印图像。";
-"error.watermarkImageMissing" = "请选择水印图像，或关闭水印模式。";
-"error.watermarkImageTooComplex" = "这张水印图像对于当前二维码来说过于复杂。请尝试更简单的裁剪区域或更短的内容。";
 "option.errorCorrection.high" = "高 (H)";
 "option.errorCorrection.low" = "低 (L)";
 "option.errorCorrection.medium" = "中 (M)";
@@ -123,15 +120,6 @@
 "settings.crop.title" = "裁剪图像";
 "settings.crop.useImage" = "使用图像";
 "settings.title" = "二维码生成器";
-"settings.watermarkChangeImage" = "更换水印图像";
-"settings.watermarkCrop" = "裁剪水印";
-"settings.watermarkCropHint" = "拖动并缩放水印图像，使其适合方形区域。";
-"settings.watermarkEditCrop" = "编辑水印裁剪";
-"settings.watermarkEnabled" = "使用水印";
-"settings.watermarkPick" = "选择水印图像";
-"settings.watermarkReliableNote" = "水印模式会自动使用适合扫描的安全设置。";
-"settings.watermarkRemove" = "移除水印";
-"settings.watermarkUseCrop" = "使用水印裁剪";
 "settings.visualEffect" = "视觉效果";
 "settings.language.system" = "跟随系统";
 "settings.language.english" = "English";
@@ -157,10 +145,3 @@
 "validation.lowResolution.warning" = "建议使用 768 px 或更大尺寸，以获得更可靠的扫描效果。";
 "validation.moduleStyleDots.warning" = "圆点模块在较小屏幕上可能降低扫描可靠性。";
 "validation.moduleStyleRounded.warning" = "圆角模块更适合搭配较大输出尺寸和高纠错级别。";
-"validation.watermarkMissing.error" = "水印模式需要先选择图像，才能保存。";
-"validation.watermarkMode.warning" = "水印模式更适合清晰的图像。分享前请在真机上测试二维码。";
-"validation.watermarkModeCorrection.warning" = "为保证可靠扫描，水印模式需要使用高纠错级别。";
-"validation.watermarkModeLogo.warning" = "水印模式不能与中心标志同时使用。";
-"validation.watermarkModeResolution.error" = "为保证可靠扫描，水印模式的输出尺寸至少需要 1024 px。";
-"validation.watermarkModeResolution.warning" = "水印模式在 1536 px 或更大输出尺寸下效果最佳。";
-"validation.watermarkModeStyle.warning" = "为保证可靠扫描，水印模式需要使用方形模块。";

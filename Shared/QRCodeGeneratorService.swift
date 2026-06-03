@@ -18,8 +18,6 @@ struct QRCodeRenderOutput {
 enum QRCodeGeneratorError: LocalizedError {
     case emptyContent
     case iconDecodeFailed
-    case watermarkImageMissing
-    case watermarkImageDecodeFailed
     case renderFailed
     case exportFailed
     case underlying(Error)
@@ -30,10 +28,6 @@ enum QRCodeGeneratorError: LocalizedError {
             AppLocalization.string("error.emptyContent")
         case .iconDecodeFailed:
             AppLocalization.string("error.iconDecode")
-        case .watermarkImageMissing:
-            AppLocalization.string("error.watermarkImageMissing")
-        case .watermarkImageDecodeFailed:
-            AppLocalization.string("error.watermarkImageDecode")
         case .renderFailed:
             AppLocalization.string("error.previewGenerate")
         case .exportFailed:
@@ -61,26 +55,6 @@ struct QRCodeGeneratorService {
 
         if settings.centerIconEnabled && settings.centerIconImageData == nil {
             results.append(.init(severity: .warning, messageKey: "validation.iconMissing.warning"))
-        }
-
-        if settings.generationMode == .watermark {
-            if settings.watermarkImageData == nil {
-                results.append(.init(severity: .error, messageKey: "validation.watermarkMissing.error"))
-            } else {
-                results.append(.init(severity: .warning, messageKey: "validation.watermarkMode.warning"))
-            }
-
-            if settings.errorCorrectionLevel == .low || settings.errorCorrectionLevel == .medium {
-                results.append(.init(severity: .warning, messageKey: "validation.watermarkModeCorrection.warning"))
-            }
-
-            if settings.moduleStyle != .square {
-                results.append(.init(severity: .warning, messageKey: "validation.watermarkModeStyle.warning"))
-            }
-
-            if settings.hasCenterIcon {
-                results.append(.init(severity: .warning, messageKey: "validation.watermarkModeLogo.warning"))
-            }
         }
 
         if settings.centerIconScale > 0.22 {
@@ -157,67 +131,32 @@ struct QRCodeGeneratorService {
             quietzone: EFEdgeInsets(top: quietZone, left: quietZone, bottom: quietZone, right: quietZone)
         )
 
-        switch settings.generationMode {
-        case .standard:
-            return .basic(
-                params: EFStyleBasicParams(
-                    icon: icon,
-                    backdrop: backdrop,
-                    position: EFStyleBasicParamsPosition(
-                        style: style.positionStyle,
-                        size: 1,
-                        color: foregroundColor
-                    ),
-                    data: EFStyleBasicParamsData(
-                        style: style.dataStyle,
-                        scale: 1,
-                        color: foregroundColor
-                    ),
-                    align: EFStyleBasicParamsAlign(
-                        style: style.alignStyle,
-                        size: 1,
-                        color: foregroundColor
-                    ),
-                    timing: EFStyleBasicParamsTiming(
-                        style: style.timingStyle,
-                        size: 1,
-                        color: foregroundColor
-                    )
+        return .basic(
+            params: EFStyleBasicParams(
+                icon: icon,
+                backdrop: backdrop,
+                position: EFStyleBasicParamsPosition(
+                    style: style.positionStyle,
+                    size: 1,
+                    color: foregroundColor
+                ),
+                data: EFStyleBasicParamsData(
+                    style: style.dataStyle,
+                    scale: 1,
+                    color: foregroundColor
+                ),
+                align: EFStyleBasicParamsAlign(
+                    style: style.alignStyle,
+                    size: 1,
+                    color: foregroundColor
+                ),
+                timing: EFStyleBasicParamsTiming(
+                    style: style.timingStyle,
+                    size: 1,
+                    color: foregroundColor
                 )
             )
-        case .watermark:
-            let watermarkImage = try makeWatermarkImage(from: settings)
-            return .resampleImage(
-                params: EFStyleResampleImageParams(
-                    icon: icon,
-                    backdrop: backdrop,
-                    image: EFStyleResampleImageParamsImage(
-                        image: .static(image: watermarkImage),
-                        mode: .scaleAspectFill,
-                        contrast: 0.28,
-                        exposure: -0.02
-                    ),
-                    align: EFStyleResampleImageParamsAlign(
-                        style: .rectangle,
-                        onlyWhite: false,
-                        size: 1,
-                        color: foregroundColor
-                    ),
-                    timing: EFStyleResampleImageParamsTiming(
-                        style: .rectangle,
-                        onlyWhite: false,
-                        size: 1,
-                        color: foregroundColor
-                    ),
-                    position: EFStyleResampleImageParamsPosition(
-                        style: .rectangle,
-                        size: 1,
-                        color: foregroundColor
-                    ),
-                    dataColor: foregroundColor
-                )
-            )
-        }
+        )
     }
 
     private func makeIcon(from settings: QRCodeSettings, borderColor: CGColor) throws -> EFStyleParamIcon? {
@@ -235,16 +174,6 @@ struct QRCodeGeneratorService {
             borderColor: borderColor,
             percentage: min(CGFloat(settings.centerIconScale), 0.24)
         )
-    }
-
-    private func makeWatermarkImage(from settings: QRCodeSettings) throws -> CGImage {
-        guard let data = settings.watermarkImageData else {
-            throw QRCodeGeneratorError.watermarkImageMissing
-        }
-        guard let image = normalizedCGImage(from: data) else {
-            throw QRCodeGeneratorError.watermarkImageDecodeFailed
-        }
-        return image
     }
 
     private func normalizedCGImage(from data: Data) -> CGImage? {

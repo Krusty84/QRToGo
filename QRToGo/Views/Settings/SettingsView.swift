@@ -12,16 +12,9 @@ import UIKit
 struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
     @State private var selectedIconItem: PhotosPickerItem?
-    @State private var selectedWatermarkImageItem: PhotosPickerItem?
     @State private var pendingCropImage: UIImage?
-    @State private var pendingCropTarget: PendingImageCropTarget?
     @State private var isCropSheetPresented = false
     @FocusState private var isAlbumNameFocused: Bool
-
-    private enum PendingImageCropTarget {
-        case watermark
-        case centerIcon
-    }
 
     var body: some View {
         NavigationStack {
@@ -32,24 +25,7 @@ struct SettingsView: View {
                 }
 
                 Section("settings.section.style") {
-                    Toggle("settings.watermarkEnabled", isOn: watermarkModeBinding)
-                        .disabled(viewModel.draftSettings.centerIconEnabled)
-
                     Toggle("settings.centerIconEnabled", isOn: centerLogoEnabledBinding)
-                        .disabled(viewModel.draftSettings.generationMode == .watermark)
-
-                    if viewModel.draftSettings.generationMode == .watermark {
-                        PhotosPicker(selection: $selectedWatermarkImageItem, matching: .images) {
-                            watermarkImagePickerContent
-                        }
-                        .buttonStyle(.plain)
-
-                        if watermarkImagePreview != nil {
-                            Button("settings.watermarkRemove", role: .destructive) {
-                                viewModel.removeWatermarkImage()
-                            }
-                        }
-                    }
 
                     if viewModel.draftSettings.centerIconEnabled {
                         PhotosPicker(selection: $selectedIconItem, matching: .images) {
@@ -113,16 +89,11 @@ struct SettingsView: View {
                 await loadIcon(from: newItem)
             }
         }
-        .onChange(of: selectedWatermarkImageItem) { _, newItem in
-            Task {
-                await loadWatermarkImage(from: newItem)
-            }
-        }
         .sheet(isPresented: $isCropSheetPresented, onDismiss: clearPendingCrop) {
             if let pendingCropImage {
                 ImageCropView(
                     image: pendingCropImage,
-                    outputSize: pendingCropOutputSize,
+                    outputSize: 512,
                     onCancel: cancelCrop,
                     onUseImage: applyCroppedImage
                 )
@@ -166,17 +137,6 @@ struct SettingsView: View {
         )
     }
 
-    private var watermarkModeBinding: Binding<Bool> {
-        Binding(
-            get: {
-                viewModel.draftSettings.generationMode == .watermark
-            },
-            set: { isEnabled in
-                viewModel.setGenerationMode(isEnabled ? .watermark : .standard)
-            }
-        )
-    }
-
     private var centerLogoEnabledBinding: Binding<Bool> {
         Binding(
             get: {
@@ -193,22 +153,6 @@ struct SettingsView: View {
             return nil
         }
         return UIImage(data: data)
-    }
-
-    private var watermarkImagePreview: UIImage? {
-        guard let data = viewModel.draftSettings.watermarkImageData else {
-            return nil
-        }
-        return UIImage(data: data)
-    }
-
-    private var pendingCropOutputSize: Int {
-        switch pendingCropTarget {
-        case .watermark:
-            1400
-        case .centerIcon, nil:
-            512
-        }
     }
 
     @ViewBuilder
@@ -243,33 +187,6 @@ struct SettingsView: View {
         }
     }
 
-    @ViewBuilder
-    private var watermarkImagePickerContent: some View {
-        if let watermarkImagePreview {
-            Image(uiImage: watermarkImagePreview)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 180)
-                .clipShape(.rect(cornerRadius: 18))
-                .overlay(alignment: .bottomTrailing) {
-                    Image(systemName: "photo.badge.plus")
-                        .font(.headline)
-                        .padding(10)
-                        .background(.ultraThinMaterial, in: Circle())
-                        .padding(12)
-                }
-        } else {
-            ContentUnavailableView(
-                "settings.watermarkPick",
-                systemImage: "photo.on.rectangle.angled"
-            )
-            .frame(maxWidth: .infinity)
-            .frame(height: 180)
-            .background(Color(uiColor: .secondarySystemBackground), in: .rect(cornerRadius: 18))
-        }
-    }
-
     @MainActor
     private func loadIcon(from item: PhotosPickerItem?) async {
         guard let item else {
@@ -283,7 +200,7 @@ struct SettingsView: View {
                 selectedIconItem = nil
                 return
             }
-            presentCrop(for: image, target: .centerIcon)
+            presentCrop(for: image)
         } catch {
             viewModel.statusMessage = error.localizedDescription
         }
@@ -291,42 +208,13 @@ struct SettingsView: View {
         selectedIconItem = nil
     }
 
-    @MainActor
-    private func loadWatermarkImage(from item: PhotosPickerItem?) async {
-        guard let item else {
-            return
-        }
-
-        do {
-            let data = try await item.loadTransferable(type: Data.self)
-            guard let data, let image = UIImage(data: data) else {
-                viewModel.statusMessage = AppLocalization.string("error.watermarkImageDecode")
-                selectedWatermarkImageItem = nil
-                return
-            }
-            presentCrop(for: image, target: .watermark)
-        } catch {
-            viewModel.statusMessage = error.localizedDescription
-        }
-
-        selectedWatermarkImageItem = nil
-    }
-
-    private func presentCrop(for image: UIImage, target: PendingImageCropTarget) {
+    private func presentCrop(for image: UIImage) {
         pendingCropImage = image
-        pendingCropTarget = target
         isCropSheetPresented = true
     }
 
     private func applyCroppedImage(_ data: Data) {
-        switch pendingCropTarget {
-        case .watermark:
-            viewModel.setWatermarkImageData(data)
-        case .centerIcon:
-            viewModel.setCenterIconData(data)
-        case nil:
-            break
-        }
+        viewModel.setCenterIconData(data)
         isCropSheetPresented = false
     }
 
@@ -336,9 +224,7 @@ struct SettingsView: View {
 
     private func clearPendingCrop() {
         pendingCropImage = nil
-        pendingCropTarget = nil
         selectedIconItem = nil
-        selectedWatermarkImageItem = nil
     }
 }
 

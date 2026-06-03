@@ -25,9 +25,6 @@
 "error.photoSave" = "Unable to save the QR code to Photos.";
 "error.previewGenerate" = "Unable to generate the QR preview.";
 "error.scanValidationFailed" = "This QR code could not be made easy to scan. Try simpler content or different colors.";
-"error.watermarkImageDecode" = "The selected watermark image could not be loaded.";
-"error.watermarkImageMissing" = "Choose a watermark image or turn off watermark mode.";
-"error.watermarkImageTooComplex" = "This watermark image is too complex for this QR code. Try a simpler crop or shorter content.";
 "option.errorCorrection.high" = "High (H)";
 "option.errorCorrection.low" = "Low (L)";
 "option.errorCorrection.medium" = "Medium (M)";
@@ -123,15 +120,6 @@
 "settings.crop.title" = "Crop image";
 "settings.crop.useImage" = "Use Image";
 "settings.title" = "QR Generator";
-"settings.watermarkChangeImage" = "Change watermark image";
-"settings.watermarkCrop" = "Crop watermark";
-"settings.watermarkCropHint" = "Move and zoom to fit the watermark inside the square.";
-"settings.watermarkEditCrop" = "Edit watermark crop";
-"settings.watermarkEnabled" = "Use watermark";
-"settings.watermarkPick" = "Choose watermark image";
-"settings.watermarkReliableNote" = "Watermark mode uses automatic scan-safe settings.";
-"settings.watermarkRemove" = "Remove watermark";
-"settings.watermarkUseCrop" = "Use watermark crop";
 "settings.visualEffect" = "Visual effect";
 "settings.language.system" = "System";
 "settings.language.english" = "English";
@@ -157,10 +145,3 @@
 "validation.lowResolution.warning" = "Use 768 px or larger for more reliable scanning.";
 "validation.moduleStyleDots.warning" = "Dot modules can reduce scanning reliability on smaller screens.";
 "validation.moduleStyleRounded.warning" = "Rounded modules work best with larger output sizes and high error correction.";
-"validation.watermarkMissing.error" = "Watermark mode needs an image before it can be saved.";
-"validation.watermarkMode.warning" = "Watermark mode works best with clear artwork. Test the QR code on a device before sharing it.";
-"validation.watermarkModeCorrection.warning" = "Watermark mode requires High error correction for reliable scanning.";
-"validation.watermarkModeLogo.warning" = "Watermark mode cannot be combined with a center logo.";
-"validation.watermarkModeResolution.error" = "Watermark mode needs at least 1024 px output for reliable scanning.";
-"validation.watermarkModeResolution.warning" = "Watermark mode works best at 1536 px output or larger.";
-"validation.watermarkModeStyle.warning" = "Watermark mode requires square modules for reliable scanning.";
