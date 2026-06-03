@@ -18,8 +18,8 @@ struct QRCodeRenderOutput {
 enum QRCodeGeneratorError: LocalizedError {
     case emptyContent
     case iconDecodeFailed
-    case staticImageMissing
-    case staticImageDecodeFailed
+    case watermarkImageMissing
+    case watermarkImageDecodeFailed
     case renderFailed
     case exportFailed
     case underlying(Error)
@@ -30,10 +30,10 @@ enum QRCodeGeneratorError: LocalizedError {
             AppLocalization.string("error.emptyContent")
         case .iconDecodeFailed:
             AppLocalization.string("error.iconDecode")
-        case .staticImageMissing:
-            AppLocalization.string("error.staticImageMissing")
-        case .staticImageDecodeFailed:
-            AppLocalization.string("error.staticImageDecode")
+        case .watermarkImageMissing:
+            AppLocalization.string("error.watermarkImageMissing")
+        case .watermarkImageDecodeFailed:
+            AppLocalization.string("error.watermarkImageDecode")
         case .renderFailed:
             AppLocalization.string("error.previewGenerate")
         case .exportFailed:
@@ -63,23 +63,23 @@ struct QRCodeGeneratorService {
             results.append(.init(severity: .warning, messageKey: "validation.iconMissing.warning"))
         }
 
-        if settings.generationMode == .staticImage {
-            if settings.staticImageData == nil {
-                results.append(.init(severity: .error, messageKey: "validation.staticImageMissing.error"))
+        if settings.generationMode == .watermark {
+            if settings.watermarkImageData == nil {
+                results.append(.init(severity: .error, messageKey: "validation.watermarkMissing.error"))
             } else {
-                results.append(.init(severity: .warning, messageKey: "validation.staticMode.warning"))
+                results.append(.init(severity: .warning, messageKey: "validation.watermarkMode.warning"))
             }
 
             if settings.errorCorrectionLevel == .low || settings.errorCorrectionLevel == .medium {
-                results.append(.init(severity: .warning, messageKey: "validation.staticModeCorrection.warning"))
+                results.append(.init(severity: .warning, messageKey: "validation.watermarkModeCorrection.warning"))
             }
 
             if settings.moduleStyle != .square {
-                results.append(.init(severity: .warning, messageKey: "validation.staticModeStyle.warning"))
+                results.append(.init(severity: .warning, messageKey: "validation.watermarkModeStyle.warning"))
             }
 
             if settings.hasCenterIcon {
-                results.append(.init(severity: .warning, messageKey: "validation.staticModeLogo.warning"))
+                results.append(.init(severity: .warning, messageKey: "validation.watermarkModeLogo.warning"))
             }
         }
 
@@ -185,14 +185,14 @@ struct QRCodeGeneratorService {
                     )
                 )
             )
-        case .staticImage:
-            let staticImage = try makeStaticImage(from: settings)
+        case .watermark:
+            let watermarkImage = try makeWatermarkImage(from: settings)
             return .resampleImage(
                 params: EFStyleResampleImageParams(
                     icon: icon,
                     backdrop: backdrop,
                     image: EFStyleResampleImageParamsImage(
-                        image: .static(image: staticImage),
+                        image: .static(image: watermarkImage),
                         mode: .scaleAspectFill,
                         contrast: 0.28,
                         exposure: -0.02
@@ -237,12 +237,12 @@ struct QRCodeGeneratorService {
         )
     }
 
-    private func makeStaticImage(from settings: QRCodeSettings) throws -> CGImage {
-        guard let data = settings.staticImageData else {
-            throw QRCodeGeneratorError.staticImageMissing
+    private func makeWatermarkImage(from settings: QRCodeSettings) throws -> CGImage {
+        guard let data = settings.watermarkImageData else {
+            throw QRCodeGeneratorError.watermarkImageMissing
         }
         guard let image = normalizedCGImage(from: data) else {
-            throw QRCodeGeneratorError.staticImageDecodeFailed
+            throw QRCodeGeneratorError.watermarkImageDecodeFailed
         }
         return image
     }

@@ -100,9 +100,28 @@ enum QRModuleStyle: String, Codable, CaseIterable, Identifiable {
 
 enum QRCodeGenerationMode: String, Codable, Identifiable {
     case standard
-    case staticImage
+    case watermark
 
     var id: String { rawValue }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+
+        switch rawValue {
+        case "standard":
+            self = .standard
+        case "watermark", "staticImage":
+            self = .watermark
+        default:
+            self = .standard
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
 }
 
 enum QRVisualEffect: String, Codable, CaseIterable, Identifiable {
@@ -131,7 +150,7 @@ struct QRCodeSettings: Codable, Equatable {
     var outputSize: Int
     var quietZone: QRQuietZonePreset
     var moduleStyle: QRModuleStyle
-    var staticImageData: Data?
+    var watermarkImageData: Data?
     var centerIconEnabled: Bool
     var centerIconImageData: Data?
     var centerIconScale: Double
@@ -151,7 +170,7 @@ struct QRCodeSettings: Codable, Equatable {
             outputSize: 1024,
             quietZone: .normal,
             moduleStyle: .square,
-            staticImageData: nil,
+            watermarkImageData: nil,
             centerIconEnabled: false,
             centerIconImageData: nil,
             centerIconScale: 0.18,
@@ -174,7 +193,7 @@ struct QRCodeSettings: Codable, Equatable {
         outputSize: Int,
         quietZone: QRQuietZonePreset,
         moduleStyle: QRModuleStyle,
-        staticImageData: Data?,
+        watermarkImageData: Data?,
         centerIconEnabled: Bool,
         centerIconImageData: Data?,
         centerIconScale: Double,
@@ -190,7 +209,7 @@ struct QRCodeSettings: Codable, Equatable {
         self.outputSize = outputSize
         self.quietZone = quietZone
         self.moduleStyle = moduleStyle
-        self.staticImageData = staticImageData
+        self.watermarkImageData = watermarkImageData
         self.centerIconEnabled = centerIconEnabled
         self.centerIconImageData = centerIconImageData
         self.centerIconScale = centerIconScale
@@ -204,8 +223,8 @@ struct QRCodeSettings: Codable, Equatable {
         centerIconEnabled && centerIconImageData != nil
     }
 
-    var hasStaticImage: Bool {
-        staticImageData != nil
+    var hasWatermarkImage: Bool {
+        watermarkImageData != nil
     }
 
     var resolvedPhotoAlbumName: String {
@@ -230,7 +249,7 @@ struct QRCodeSettings: Codable, Equatable {
         copy.moduleStyle = Self.automaticScanSafeDefaults.moduleStyle
         copy.centerIconScale = Self.automaticScanSafeDefaults.centerIconScale
         copy.visualEffect = Self.automaticScanSafeDefaults.visualEffect
-        if copy.generationMode == .staticImage {
+        if copy.generationMode == .watermark {
             copy.centerIconEnabled = false
         }
         copy.photoAlbumName = copy.resolvedPhotoAlbumName
@@ -245,6 +264,7 @@ struct QRCodeSettings: Codable, Equatable {
         case outputSize
         case quietZone
         case moduleStyle
+        case watermarkImageData
         case staticImageData
         case centerIconEnabled
         case centerIconImageData
@@ -266,7 +286,9 @@ struct QRCodeSettings: Codable, Equatable {
         outputSize = try container.decodeIfPresent(Int.self, forKey: .outputSize) ?? defaults.outputSize
         quietZone = try container.decodeIfPresent(QRQuietZonePreset.self, forKey: .quietZone) ?? defaults.quietZone
         moduleStyle = try container.decodeIfPresent(QRModuleStyle.self, forKey: .moduleStyle) ?? defaults.moduleStyle
-        staticImageData = try container.decodeIfPresent(Data.self, forKey: .staticImageData)
+        watermarkImageData =
+            try container.decodeIfPresent(Data.self, forKey: .watermarkImageData)
+            ?? container.decodeIfPresent(Data.self, forKey: .staticImageData)
         centerIconEnabled = try container.decodeIfPresent(Bool.self, forKey: .centerIconEnabled) ?? defaults.centerIconEnabled
         centerIconImageData = try container.decodeIfPresent(Data.self, forKey: .centerIconImageData)
         centerIconScale = try container.decodeIfPresent(Double.self, forKey: .centerIconScale) ?? defaults.centerIconScale
@@ -276,6 +298,25 @@ struct QRCodeSettings: Codable, Equatable {
         updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
 
         self = normalized()
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(generationMode, forKey: .generationMode)
+        try container.encode(foregroundColor, forKey: .foregroundColor)
+        try container.encode(backgroundColor, forKey: .backgroundColor)
+        try container.encode(errorCorrectionLevel, forKey: .errorCorrectionLevel)
+        try container.encode(outputSize, forKey: .outputSize)
+        try container.encode(quietZone, forKey: .quietZone)
+        try container.encode(moduleStyle, forKey: .moduleStyle)
+        try container.encodeIfPresent(watermarkImageData, forKey: .watermarkImageData)
+        try container.encode(centerIconEnabled, forKey: .centerIconEnabled)
+        try container.encodeIfPresent(centerIconImageData, forKey: .centerIconImageData)
+        try container.encode(centerIconScale, forKey: .centerIconScale)
+        try container.encode(visualEffect, forKey: .visualEffect)
+        try container.encode(photoAlbumName, forKey: .photoAlbumName)
+        try container.encodeIfPresent(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
     }
 }
 

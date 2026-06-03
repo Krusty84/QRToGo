@@ -111,22 +111,22 @@ final class SettingsViewModel {
         setCenterLogoEnabled(false)
     }
 
-    func setStaticImageData(_ data: Data?) {
+    func setWatermarkImageData(_ data: Data?) {
         guard let data else {
-            draftSettings.staticImageData = nil
+            draftSettings.watermarkImageData = nil
             setGenerationMode(.standard)
             return
         }
         guard let preparedData = prepareImageData(from: data, maxDimension: 1400) else {
-            statusMessage = AppLocalization.string("error.staticImageDecode")
+            statusMessage = AppLocalization.string("error.watermarkImageDecode")
             return
         }
-        draftSettings.staticImageData = preparedData
-        setGenerationMode(.staticImage)
+        draftSettings.watermarkImageData = preparedData
+        setGenerationMode(.watermark)
     }
 
-    func removeStaticImage() {
-        draftSettings.staticImageData = nil
+    func removeWatermarkImage() {
+        draftSettings.watermarkImageData = nil
         setGenerationMode(.standard)
     }
 
@@ -139,7 +139,7 @@ final class SettingsViewModel {
 
     func setGenerationMode(_ mode: QRCodeGenerationMode) {
         draftSettings.generationMode = mode
-        if mode == .staticImage {
+        if mode == .watermark {
             draftSettings.centerIconEnabled = false
         }
     }

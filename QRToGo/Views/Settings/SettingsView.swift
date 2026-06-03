@@ -12,14 +12,14 @@ import UIKit
 struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
     @State private var selectedIconItem: PhotosPickerItem?
-    @State private var selectedStaticImageItem: PhotosPickerItem?
+    @State private var selectedWatermarkImageItem: PhotosPickerItem?
     @State private var pendingCropImage: UIImage?
     @State private var pendingCropTarget: PendingImageCropTarget?
     @State private var isCropSheetPresented = false
     @FocusState private var isAlbumNameFocused: Bool
 
     private enum PendingImageCropTarget {
-        case staticImage
+        case watermark
         case centerIcon
     }
 
@@ -32,21 +32,21 @@ struct SettingsView: View {
                 }
 
                 Section("settings.section.style") {
-                    Toggle("settings.styleImageEnabled", isOn: staticImageModeBinding)
+                    Toggle("settings.watermarkEnabled", isOn: watermarkModeBinding)
                         .disabled(viewModel.draftSettings.centerIconEnabled)
 
                     Toggle("settings.centerIconEnabled", isOn: centerLogoEnabledBinding)
-                        .disabled(viewModel.draftSettings.generationMode == .staticImage)
+                        .disabled(viewModel.draftSettings.generationMode == .watermark)
 
-                    if viewModel.draftSettings.generationMode == .staticImage {
-                        PhotosPicker(selection: $selectedStaticImageItem, matching: .images) {
-                            staticImagePickerContent
+                    if viewModel.draftSettings.generationMode == .watermark {
+                        PhotosPicker(selection: $selectedWatermarkImageItem, matching: .images) {
+                            watermarkImagePickerContent
                         }
                         .buttonStyle(.plain)
 
-                        if staticImagePreview != nil {
-                            Button("settings.styleImageRemove", role: .destructive) {
-                                viewModel.removeStaticImage()
+                        if watermarkImagePreview != nil {
+                            Button("settings.watermarkRemove", role: .destructive) {
+                                viewModel.removeWatermarkImage()
                             }
                         }
                     }
@@ -113,9 +113,9 @@ struct SettingsView: View {
                 await loadIcon(from: newItem)
             }
         }
-        .onChange(of: selectedStaticImageItem) { _, newItem in
+        .onChange(of: selectedWatermarkImageItem) { _, newItem in
             Task {
-                await loadStaticImage(from: newItem)
+                await loadWatermarkImage(from: newItem)
             }
         }
         .sheet(isPresented: $isCropSheetPresented, onDismiss: clearPendingCrop) {
@@ -166,13 +166,13 @@ struct SettingsView: View {
         )
     }
 
-    private var staticImageModeBinding: Binding<Bool> {
+    private var watermarkModeBinding: Binding<Bool> {
         Binding(
             get: {
-                viewModel.draftSettings.generationMode == .staticImage
+                viewModel.draftSettings.generationMode == .watermark
             },
             set: { isEnabled in
-                viewModel.setGenerationMode(isEnabled ? .staticImage : .standard)
+                viewModel.setGenerationMode(isEnabled ? .watermark : .standard)
             }
         )
     }
@@ -195,8 +195,8 @@ struct SettingsView: View {
         return UIImage(data: data)
     }
 
-    private var staticImagePreview: UIImage? {
-        guard let data = viewModel.draftSettings.staticImageData else {
+    private var watermarkImagePreview: UIImage? {
+        guard let data = viewModel.draftSettings.watermarkImageData else {
             return nil
         }
         return UIImage(data: data)
@@ -204,7 +204,7 @@ struct SettingsView: View {
 
     private var pendingCropOutputSize: Int {
         switch pendingCropTarget {
-        case .staticImage:
+        case .watermark:
             1400
         case .centerIcon, nil:
             512
@@ -244,9 +244,9 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
-    private var staticImagePickerContent: some View {
-        if let staticImagePreview {
-            Image(uiImage: staticImagePreview)
+    private var watermarkImagePickerContent: some View {
+        if let watermarkImagePreview {
+            Image(uiImage: watermarkImagePreview)
                 .resizable()
                 .scaledToFill()
                 .frame(maxWidth: .infinity)
@@ -261,7 +261,7 @@ struct SettingsView: View {
                 }
         } else {
             ContentUnavailableView(
-                "settings.styleImagePick",
+                "settings.watermarkPick",
                 systemImage: "photo.on.rectangle.angled"
             )
             .frame(maxWidth: .infinity)
@@ -292,7 +292,7 @@ struct SettingsView: View {
     }
 
     @MainActor
-    private func loadStaticImage(from item: PhotosPickerItem?) async {
+    private func loadWatermarkImage(from item: PhotosPickerItem?) async {
         guard let item else {
             return
         }
@@ -300,16 +300,16 @@ struct SettingsView: View {
         do {
             let data = try await item.loadTransferable(type: Data.self)
             guard let data, let image = UIImage(data: data) else {
-                viewModel.statusMessage = AppLocalization.string("error.staticImageDecode")
-                selectedStaticImageItem = nil
+                viewModel.statusMessage = AppLocalization.string("error.watermarkImageDecode")
+                selectedWatermarkImageItem = nil
                 return
             }
-            presentCrop(for: image, target: .staticImage)
+            presentCrop(for: image, target: .watermark)
         } catch {
             viewModel.statusMessage = error.localizedDescription
         }
 
-        selectedStaticImageItem = nil
+        selectedWatermarkImageItem = nil
     }
 
     private func presentCrop(for image: UIImage, target: PendingImageCropTarget) {
@@ -320,8 +320,8 @@ struct SettingsView: View {
 
     private func applyCroppedImage(_ data: Data) {
         switch pendingCropTarget {
-        case .staticImage:
-            viewModel.setStaticImageData(data)
+        case .watermark:
+            viewModel.setWatermarkImageData(data)
         case .centerIcon:
             viewModel.setCenterIconData(data)
         case nil:
@@ -338,7 +338,7 @@ struct SettingsView: View {
         pendingCropImage = nil
         pendingCropTarget = nil
         selectedIconItem = nil
-        selectedStaticImageItem = nil
+        selectedWatermarkImageItem = nil
     }
 }
 
