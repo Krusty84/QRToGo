@@ -123,7 +123,7 @@ struct FavoriteQuickActionMissingView: View {
     }
 }
 
-private struct QuickActionPresentationContainer<Content: View>: View {
+struct QuickActionPresentationContainer<Content: View>: View {
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {

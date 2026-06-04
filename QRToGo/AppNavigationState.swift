@@ -15,11 +15,19 @@ enum MainTab: Hashable {
     case about
 }
 
+enum AppLaunchMode: Equatable {
+    case normal
+    case favoriteQuickAction(UUID)
+}
+
 @Observable
 @MainActor
 final class AppNavigationState {
+    var launchMode: AppLaunchMode = .normal
     var selectedTab: MainTab = .generate
     var requestedFavoriteID: UUID?
-    var quickActionFavoriteID: UUID?
-    var quickActionPresentationError: String?
+
+    init(launchMode: AppLaunchMode = .normal) {
+        self.launchMode = launchMode
+    }
 }

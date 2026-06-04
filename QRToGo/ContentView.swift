@@ -8,103 +8,57 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var navigationState = AppNavigationState()
+    @State private var navigationState: AppNavigationState
     @State private var settingsViewModel = SettingsViewModel()
     @State private var generateViewModel = GenerateViewModel()
     @State private var favoritesViewModel = FavoritesViewModel()
 
+    init() {
+        let launchMode = FavoriteShortcutRouter.shared.initialLaunchMode()
+        _navigationState = State(initialValue: AppNavigationState(launchMode: launchMode))
+    }
+
     var body: some View {
-        @Bindable var bindableNavigationState = navigationState
-
-        ZStack {
-            TabView(selection: $bindableNavigationState.selectedTab) {
-                GenerateView(
-                    viewModel: generateViewModel,
-                    settingsViewModel: settingsViewModel,
-                    favoritesViewModel: favoritesViewModel
-                )
-                    .tabItem {
-                        Label("tab.generate", systemImage: "qrcode.viewfinder")
-                    }
-                    .tag(MainTab.generate)
-
-                FavoritesView(
-                    viewModel: favoritesViewModel,
-                    navigationState: navigationState
-                )
-                    .tabItem {
-                        Label("tab.favorites", systemImage: "star.fill")
-                    }
-                    .tag(MainTab.favorites)
-
-                SettingsView(viewModel: settingsViewModel)
-                    .tabItem {
-                        Label("tab.settings", systemImage: "gearshape")
-                    }
-                    .tag(MainTab.settings)
-
-                AboutView()
-                    .tabItem {
-                        Label("tab.about", systemImage: "info.circle")
-                    }
-                    .tag(MainTab.about)
+        rootContent
+            .task {
+                settingsViewModel.loadIfNeeded()
+                favoritesViewModel.loadIfNeeded()
+                FavoriteShortcutRouter.shared.connect(navigationState)
+                generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
             }
-
-            quickActionPresentation
-        }
-        .task {
-            settingsViewModel.loadIfNeeded()
-            favoritesViewModel.loadIfNeeded()
-            FavoriteShortcutRouter.shared.connect(navigationState)
-            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
-        }
-        .environment(\.locale, settingsViewModel.appLanguage.locale)
-        .onChange(of: generateViewModel.contentDraft) { _, _ in
-            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
-        }
-        .onChange(of: settingsViewModel.draftSettings) { _, _ in
-            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
-        }
-        .onChange(of: settingsViewModel.appLanguage) { _, _ in
-            generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
-            FavoriteQuickActionService().updateShortcuts(from: favoritesViewModel.favorites)
-        }
+            .environment(\.locale, settingsViewModel.appLanguage.locale)
+            .onChange(of: generateViewModel.contentDraft) { _, _ in
+                generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
+            }
+            .onChange(of: settingsViewModel.draftSettings) { _, _ in
+                generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
+            }
+            .onChange(of: settingsViewModel.appLanguage) { _, _ in
+                generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
+                FavoriteQuickActionService().updateShortcuts(from: favoritesViewModel.favorites)
+            }
     }
 
     @ViewBuilder
-    private var quickActionPresentation: some View {
-        if let favoriteID = navigationState.quickActionFavoriteID {
-            if let favorite = favoritesViewModel.favorite(id: favoriteID) {
-                FavoriteQuickActionPresentationView(
-                    favorite: favorite,
-                    onClose: closeQuickActionPresentation
-                )
-                .transition(.opacity)
-                .zIndex(1)
-            } else {
-                FavoriteQuickActionMissingView(onClose: closeQuickActionPresentation)
-                    .transition(.opacity)
-                    .zIndex(1)
-            }
-        } else if navigationState.quickActionPresentationError != nil {
-            FavoriteQuickActionMissingView(onClose: closeQuickActionPresentation)
-                .transition(.opacity)
-                .zIndex(1)
+    private var rootContent: some View {
+        switch navigationState.launchMode {
+        case .normal:
+            MainTabRootView(
+                navigationState: navigationState,
+                settingsViewModel: settingsViewModel,
+                generateViewModel: generateViewModel,
+                favoritesViewModel: favoritesViewModel
+            )
+        case let .favoriteQuickAction(favoriteID):
+            FavoriteQuickActionRootView(
+                favoriteID: favoriteID,
+                onClose: closeQuickActionPresentation
+            )
         }
     }
 
     private func closeQuickActionPresentation() {
-        navigationState.quickActionFavoriteID = nil
-        navigationState.quickActionPresentationError = nil
-    }
-}
-
-private struct AboutView: View {
-    var body: some View {
-        NavigationStack {
-            Color.clear
-                .navigationTitle("tab.about")
-        }
+        navigationState.launchMode = .normal
     }
 }
 

@@ -16,6 +16,15 @@ final class FavoriteShortcutRouter {
 
     private init() { }
 
+    func initialLaunchMode() -> AppLaunchMode {
+        guard let pendingFavoriteID else {
+            return .normal
+        }
+
+        self.pendingFavoriteID = nil
+        return .favoriteQuickAction(pendingFavoriteID)
+    }
+
     func connect(_ navigationState: AppNavigationState) {
         self.navigationState = navigationState
 
@@ -44,7 +53,6 @@ final class FavoriteShortcutRouter {
             return
         }
 
-        navigationState.quickActionFavoriteID = favoriteID
-        navigationState.quickActionPresentationError = nil
+        navigationState.launchMode = .favoriteQuickAction(favoriteID)
     }
 }
