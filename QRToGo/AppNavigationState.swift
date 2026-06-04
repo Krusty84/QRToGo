@@ -20,4 +20,6 @@ enum MainTab: Hashable {
 final class AppNavigationState {
     var selectedTab: MainTab = .generate
     var requestedFavoriteID: UUID?
+    var quickActionFavoriteID: UUID?
+    var quickActionPresentationError: String?
 }

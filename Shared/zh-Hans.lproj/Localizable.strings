@@ -96,6 +96,11 @@
 "favorites.name.placeholder" = "收藏名称";
 "favorites.open.missing" = "此收藏已不可用。";
 "favorites.preview" = "收藏二维码预览";
+"favorites.quickAction.close" = "关闭";
+"favorites.quickAction.error" = "无法显示此二维码。";
+"favorites.quickAction.loading" = "正在生成二维码…";
+"favorites.quickAction.missing" = "此收藏已不可用。";
+"favorites.quickAction.preview" = "收藏二维码";
 "favorites.rename" = "重命名";
 "favorites.suggestion.myContact" = "My Contact";
 "favorites.suggestion.myEmergency" = "My Emergency";

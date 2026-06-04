@@ -44,7 +44,7 @@ final class FavoriteShortcutRouter {
             return
         }
 
-        navigationState.selectedTab = .favorites
-        navigationState.requestedFavoriteID = favoriteID
+        navigationState.quickActionFavoriteID = favoriteID
+        navigationState.quickActionPresentationError = nil
     }
 }

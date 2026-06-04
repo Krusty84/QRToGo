@@ -96,6 +96,11 @@
 "favorites.name.placeholder" = "Favorite name";
 "favorites.open.missing" = "This favorite is no longer available.";
 "favorites.preview" = "Favorite QR Preview";
+"favorites.quickAction.close" = "Close";
+"favorites.quickAction.error" = "Unable to show this QR code.";
+"favorites.quickAction.loading" = "Generating QR code…";
+"favorites.quickAction.missing" = "This favorite is no longer available.";
+"favorites.quickAction.preview" = "Favorite QR Code";
 "favorites.rename" = "Rename";
 "favorites.suggestion.myContact" = "My Contact";
 "favorites.suggestion.myEmergency" = "My Emergency";
