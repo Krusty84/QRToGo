@@ -619,82 +619,25 @@ final class GenerateViewModel {
         return components.string ?? "geo:\(coordinateText)"
     }
 
-//    private func makeSelectedContact(from contact: CNContact) throws -> GenerateSelectedContact {
-//        let payload = try ContactVCardPayloadBuilder.makePayload(
-//            from: contact,
-//            fallbackNameKey: "generate.contactFallback"
-//        )
-//
-//        return GenerateSelectedContact(
-//            displayName: payload.displayName,
-//            vCardString: payload.content
-//        )
-//    }
-    
     private func makeSelectedContact(from contact: CNContact) throws -> GenerateSelectedContact {
-        #if DEBUG
-        print("")
-        print("========== CNCONTACT RAW DIAGNOSTICS ==========")
-        print("Has imageData: \(contact.imageData != nil)")
-        print("Has thumbnailImageData: \(contact.thumbnailImageData != nil)")
-        print("Phone count: \(contact.phoneNumbers.count)")
-        print("Email count: \(contact.emailAddresses.count)")
-        print("Postal address count: \(contact.postalAddresses.count)")
-        print("URL count: \(contact.urlAddresses.count)")
-        print("Contact relations count: \(contact.contactRelations.count)")
-        print("Social profiles count: \(contact.socialProfiles.count)")
-        print("Instant message addresses count: \(contact.instantMessageAddresses.count)")
-        print("Dates count: \(contact.dates.count)")
-        print("Has note: \(contact.note.isEmpty == false)")
-        print("===============================================")
-        print("")
-        #endif
-
-        let rawVCardData = try CNContactVCardSerialization.data(with: [contact])
+        let payload = try ContactVCardPayloadBuilder.makePayload(
+            from: contact,
+            fallbackNameKey: "generate.contactFallback"
+        )
 
         #if DEBUG
-        ContactQRPayloadDiagnostics.logVCardData(
-            rawVCardData,
-            source: "MainApp.ContactPicker.raw"
+        ContactQRPayloadDiagnostics.logVCardText(
+            payload.content,
+            source: "MainApp.ContactPicker.finalPayload.afterSanitize"
         )
         #endif
-
-        let sanitizedContact = contact.mutableCopy() as! CNMutableContact
-        sanitizedContact.imageData = nil
-        //sanitizedContact.thumbnailImageData = nil
-
-        let sanitizedVCardData = try CNContactVCardSerialization.data(with: [sanitizedContact])
-
-        #if DEBUG
-        ContactQRPayloadDiagnostics.logVCardData(
-            sanitizedVCardData,
-            source: "MainApp.ContactPicker.sanitized.noImage"
-        )
-        #endif
-
-        let normalizedContacts = try CNContactVCardSerialization.contacts(with: sanitizedVCardData)
-        let normalizedVCardData = try CNContactVCardSerialization.data(with: normalizedContacts)
-
-        #if DEBUG
-        ContactQRPayloadDiagnostics.logVCardData(
-            normalizedVCardData,
-            source: "MainApp.ContactPicker.sanitized.roundTripNormalized"
-        )
-        #endif
-
-        let displayName =
-            CNContactFormatter.string(from: contact, style: .fullName)?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .nonEmpty
-            ?? contact.organizationName.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
-            ?? AppLocalization.string("generate.contactFallback")
 
         return GenerateSelectedContact(
-            displayName: displayName,
-            vCardString: String(decoding: normalizedVCardData, as: UTF8.self)
+            displayName: payload.displayName,
+            vCardString: payload.content
         )
     }
-
+    
     private func escapedWiFiValue(_ value: String) -> String {
         value
             .replacingOccurrences(of: "\\", with: "\\\\")

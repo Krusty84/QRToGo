@@ -32,14 +32,28 @@ enum ContactVCardPayloadBuilder {
         }
 
         let normalizedData = try CNContactVCardSerialization.data(with: contacts)
-        let content = String(decoding: normalizedData, as: UTF8.self)
+        let normalizedContent = String(decoding: normalizedData, as: UTF8.self)
+        let sanitizedContent = VCardPayloadSanitizer.sanitize(normalizedContent)
+
+        #if DEBUG
+        ContactQRPayloadDiagnostics.logVCardText(
+            normalizedContent,
+            source: "ContactVCardPayloadBuilder.normalized.beforeSanitize"
+        )
+
+        ContactQRPayloadDiagnostics.logVCardText(
+            sanitizedContent,
+            source: "ContactVCardPayloadBuilder.normalized.afterSanitize"
+        )
+        #endif
+
         let displayName = contactDisplayName(from: primaryContact, fallbackNameKey: fallbackNameKey)
         let previewValue = contactPreviewValue(from: primaryContact, fallback: displayName)
 
         return ContactVCardPayload(
             displayName: displayName,
             previewValue: previewValue,
-            content: content
+            content: sanitizedContent
         )
     }
 
