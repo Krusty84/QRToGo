@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Contacts
 import UniformTypeIdentifiers
 
 struct SharedInputCandidate: Identifiable, Hashable {
@@ -208,24 +207,33 @@ struct SharedInputReader {
     }
 
     private func makeContactCandidate(from data: Data) throws -> SharedInputCandidate? {
-        let contacts = try CNContactVCardSerialization.contacts(with: data)
-        guard let primaryContact = contacts.first else {
-            return nil
-        }
+        #if DEBUG
+        ContactQRPayloadDiagnostics.logVCardData(
+            data,
+            source: "ShareExtension.incomingVCard"
+        )
+        #endif
 
-        let normalizedData = try CNContactVCardSerialization.data(with: contacts)
-        let content = String(decoding: normalizedData, as: UTF8.self)
-        let displayName = contactDisplayName(from: primaryContact)
-        let previewValue = contactPreviewValue(from: primaryContact, fallback: displayName)
+        let payload = try ContactVCardPayloadBuilder.makePayload(
+            fromVCardData: data,
+            fallbackNameKey: "share.contactFallback"
+        )
+
+        #if DEBUG
+        ContactQRPayloadDiagnostics.logVCardText(
+            payload.content,
+            source: "ShareExtension.normalizedVCard"
+        )
+        #endif
 
         return SharedInputCandidate(
             kind: .contact,
-            sourceTitle: displayName,
-            content: content,
-            previewValue: previewValue
+            sourceTitle: payload.displayName,
+            content: payload.content,
+            previewValue: payload.previewValue
         )
     }
-
+    
     private func loadURL(from provider: NSItemProvider, typeIdentifier: String) async throws -> URL? {
         guard provider.hasItemConformingToTypeIdentifier(typeIdentifier) else {
             return nil
@@ -362,37 +370,6 @@ struct SharedInputReader {
         return typeIdentifier.localizedCaseInsensitiveContains("vcard")
     }
 
-    private func contactDisplayName(from contact: CNContact) -> String {
-        if let fullName = CNContactFormatter.string(from: contact, style: .fullName)?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-           fullName.isEmpty == false
-        {
-            return fullName
-        }
-
-        let organizationName = contact.organizationName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if organizationName.isEmpty == false {
-            return organizationName
-        }
-
-        return AppLocalization.string("share.contactFallback")
-    }
-
-    private func contactPreviewValue(from contact: CNContact, fallback: String) -> String {
-        if let phone = contact.phoneNumbers.first?.value.stringValue.trimmingCharacters(in: .whitespacesAndNewlines),
-           phone.isEmpty == false
-        {
-            return phone
-        }
-
-        if let email = contact.emailAddresses.first?.value as String?,
-           email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-        {
-            return email
-        }
-
-        return fallback
-    }
 }
 
 private struct ImportedFile {

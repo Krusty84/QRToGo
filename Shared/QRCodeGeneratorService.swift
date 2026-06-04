@@ -90,6 +90,13 @@ struct QRCodeGeneratorService {
         guard trimmedContent.isEmpty == false else {
             throw QRCodeGeneratorError.emptyContent
         }
+        
+        #if DEBUG
+        ContactQRPayloadDiagnostics.logQRCodeInput(
+            trimmedContent,
+            source: "QRCodeGeneratorService.generate"
+        )
+        #endif
 
         let settings = settings.normalized()
         let finalPixelSize = max(outputSize ?? settings.outputSize, 256)
@@ -116,6 +123,15 @@ struct QRCodeGeneratorService {
         } catch let error as QRCodeGeneratorError {
             throw error
         } catch {
+            
+         #if DEBUG
+          ContactQRPayloadDiagnostics.logQRCodeFailure(
+              error,
+              content: trimmedContent,
+              source: "QRCodeGeneratorService.generate"
+          )
+          #endif
+            
             throw QRCodeGeneratorError.underlying(error)
         }
     }
