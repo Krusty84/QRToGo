@@ -144,6 +144,34 @@ final class GenerateViewModel {
         }
     }
 
+    func canMakeFavoriteQRCode(using settings: QRCodeSettings) -> Bool {
+        let validationResults = generatorService.validationResults(for: settings)
+        guard validationResults.contains(where: { $0.severity == .error }) == false else {
+            return false
+        }
+
+        return (try? generatedContent()) != nil
+    }
+
+    func makeFavoriteQRCode(name: String, using settings: QRCodeSettings) throws -> FavoriteQRCode {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedName.isEmpty == false else {
+            throw FavoriteQRCodeCreationError.emptyName
+        }
+
+        let now = Date.now
+        return FavoriteQRCode(
+            id: UUID(),
+            name: trimmedName,
+            kind: contentDraft.kind,
+            payload: try generatedContent(),
+            settings: settings.normalized(),
+            exportPurpose: exportPurposeDraft.nonEmpty,
+            createdAt: now,
+            updatedAt: now
+        )
+    }
+
     private func exportCardMetadata(
         createdAt: Date,
         payload: String
@@ -685,6 +713,14 @@ private struct ExportSafeSummary {
     let detailValue: String?
     let keywordValues: [String]
     let filenameHint: String?
+}
+
+private enum FavoriteQRCodeCreationError: LocalizedError {
+    case emptyName
+
+    var errorDescription: String? {
+        AppLocalization.string("favorites.add.error")
+    }
 }
 
 private extension String {

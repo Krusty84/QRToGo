@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum GenerateContentKind: String, CaseIterable, Identifiable {
+enum GenerateContentKind: String, Codable, CaseIterable, Identifiable {
     case website
     case contact
     case wifi

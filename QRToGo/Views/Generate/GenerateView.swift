@@ -10,7 +10,9 @@ import SwiftUI
 struct GenerateView: View {
     @Bindable var viewModel: GenerateViewModel
     let settingsViewModel: SettingsViewModel
+    let favoritesViewModel: FavoritesViewModel
     @State private var isContactPickerPresented = false
+    @State private var isFavoriteSheetPresented = false
     @FocusState private var focusedField: FocusedField?
 
     private let modeColumns = [
@@ -107,6 +109,11 @@ struct GenerateView: View {
                             || viewModel.isGeneratingPreview
                             || settingsViewModel.hasBlockingValidation
                     )
+
+                    Button("favorites.add.button", systemImage: "star.badge.plus") {
+                        isFavoriteSheetPresented = true
+                    }
+                    .disabled(isAddToFavoriteDisabled)
                 }
 
                 if let statusMessage = viewModel.statusMessage {
@@ -130,6 +137,11 @@ struct GenerateView: View {
                     isContactPickerPresented = false
                 }
             )
+        }
+        .sheet(isPresented: $isFavoriteSheetPresented) {
+            AddFavoriteSheet { name in
+                addFavorite(named: name)
+            }
         }
     }
 
@@ -299,6 +311,82 @@ struct GenerateView: View {
         .padding(.vertical, 28)
         .background(Color(uiColor: .secondarySystemBackground), in: .rect(cornerRadius: 18))
     }
+
+    private var isAddToFavoriteDisabled: Bool {
+        viewModel.isGeneratingPreview
+            || settingsViewModel.hasBlockingValidation
+            || viewModel.canMakeFavoriteQRCode(using: settingsViewModel.draftSettings) == false
+    }
+
+    private func addFavorite(named name: String) {
+        guard settingsViewModel.hasBlockingValidation == false else {
+            viewModel.statusMessage = AppLocalization.string("settings.fixErrorsFirst")
+            return
+        }
+
+        do {
+            let favorite = try viewModel.makeFavoriteQRCode(
+                name: name,
+                using: settingsViewModel.draftSettings
+            )
+            try favoritesViewModel.addFavorite(favorite)
+            viewModel.statusMessage = AppLocalization.string("favorites.add.success")
+        } catch let error as GenerateContentError {
+            viewModel.statusMessage = error.localizedDescription
+        } catch {
+            viewModel.statusMessage = AppLocalization.string("favorites.add.error")
+        }
+    }
+}
+
+private struct AddFavoriteSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+
+    let onAdd: (String) -> Void
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("favorites.name") {
+                    TextField("favorites.name.placeholder", text: $name)
+                        .textInputAutocapitalization(.words)
+                }
+
+                Section("favorites.suggestions") {
+                    suggestionButton("favorites.suggestion.myContact")
+                    suggestionButton("favorites.suggestion.myEmergency")
+                    suggestionButton("favorites.suggestion.myWebsite")
+                }
+            }
+            .navigationTitle("favorites.add.title")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("share.cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("favorites.add.confirm") {
+                        onAdd(trimmedName)
+                        dismiss()
+                    }
+                    .disabled(trimmedName.isEmpty)
+                }
+            }
+        }
+    }
+
+    private var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func suggestionButton(_ titleKey: String) -> some View {
+        Button(LocalizedStringKey(titleKey)) {
+            name = AppLocalization.string(titleKey)
+        }
+    }
 }
 
 private enum FocusedField: Hashable {
@@ -322,6 +410,7 @@ private enum FocusedField: Hashable {
 #Preview {
     GenerateView(
         viewModel: GenerateViewModel(),
-        settingsViewModel: SettingsViewModel()
+        settingsViewModel: SettingsViewModel(),
+        favoritesViewModel: FavoritesViewModel()
     )
 }
