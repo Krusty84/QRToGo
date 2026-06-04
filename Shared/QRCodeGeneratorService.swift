@@ -90,7 +90,7 @@ struct QRCodeGeneratorService {
         guard trimmedContent.isEmpty == false else {
             throw QRCodeGeneratorError.emptyContent
         }
-        
+
         #if DEBUG
         ContactQRPayloadDiagnostics.logQRCodeInput(
             trimmedContent,
@@ -98,7 +98,16 @@ struct QRCodeGeneratorService {
         )
         #endif
 
-        let settings = settings.normalized()
+        var settings = settings.normalized()
+        settings.errorCorrectionLevel = QRCodeErrorCorrectionPolicy.recommendedLevel(
+            for: trimmedContent,
+            settings: settings
+        )
+
+        #if DEBUG
+        print("Adaptive QR correction level: \(settings.errorCorrectionLevel.rawValue)")
+        #endif
+
         let finalPixelSize = max(outputSize ?? settings.outputSize, 256)
         let effectPadding = settings.visualEffect == .none ? 0 : max(Int(Double(finalPixelSize) * 0.06), 28)
         let qrPixelSize = max(finalPixelSize - (effectPadding * 2), 256)
@@ -109,6 +118,7 @@ struct QRCodeGeneratorService {
                 errorCorrectLevel: settings.errorCorrectionLevel.efCorrectionLevel,
                 style: try makeStyle(from: settings)
             )
+
             let qrImage = try generator.toImage(width: CGFloat(qrPixelSize))
             let finalImage = applyVisualEffect(
                 to: qrImage,
@@ -116,22 +126,23 @@ struct QRCodeGeneratorService {
                 finalPixelSize: finalPixelSize,
                 padding: effectPadding
             )
+
             guard let pngData = finalImage.pngData() else {
                 throw QRCodeGeneratorError.exportFailed
             }
+
             return QRCodeRenderOutput(image: finalImage, pngData: pngData)
         } catch let error as QRCodeGeneratorError {
             throw error
         } catch {
-            
-         #if DEBUG
-          ContactQRPayloadDiagnostics.logQRCodeFailure(
-              error,
-              content: trimmedContent,
-              source: "QRCodeGeneratorService.generate"
-          )
-          #endif
-            
+            #if DEBUG
+            ContactQRPayloadDiagnostics.logQRCodeFailure(
+                error,
+                content: trimmedContent,
+                source: "QRCodeGeneratorService.generate"
+            )
+            #endif
+
             throw QRCodeGeneratorError.underlying(error)
         }
     }
