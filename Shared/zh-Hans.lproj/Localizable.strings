@@ -90,6 +90,7 @@
 "settings.centerIconPick" = "选择标志";
 "settings.centerIconRemove" = "移除标志";
 "settings.centerIconScale" = "标志大小";
+"settings.centerIconScaleHint" = "标志越大越醒目，但可能会降低二维码的读取成功率。QRToGo 会自动限制密集二维码的最终大小。";
 "settings.errorCorrection" = "纠错级别";
 "settings.fixErrorsFirst" = "请先解决剩余问题，再保存设置。";
 "settings.foregroundColor" = "前景颜色";

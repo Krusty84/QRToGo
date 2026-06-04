@@ -57,9 +57,9 @@ struct QRCodeGeneratorService {
             results.append(.init(severity: .warning, messageKey: "validation.iconMissing.warning"))
         }
 
-        if settings.centerIconScale > 0.22 {
+        if settings.centerIconScale > 0.24 {
             results.append(.init(severity: .error, messageKey: "validation.iconTooLarge.error"))
-        } else if settings.centerIconScale > 0.18 {
+        } else if settings.centerIconScale > 0.20 {
             results.append(.init(severity: .warning, messageKey: "validation.iconTooLarge.warning"))
         }
 
@@ -116,7 +116,11 @@ struct QRCodeGeneratorService {
             let generator = try EFQRCode.Generator(
                 trimmedContent,
                 errorCorrectLevel: settings.errorCorrectionLevel.efCorrectionLevel,
-                style: try makeStyle(from: settings)
+                style: try makeStyle(
+                    from: settings,
+                    content: trimmedContent,
+                    qrPixelSize: qrPixelSize
+                )
             )
 
             let qrImage = try generator.toImage(width: CGFloat(qrPixelSize))
@@ -147,12 +151,22 @@ struct QRCodeGeneratorService {
         }
     }
 
-    private func makeStyle(from settings: QRCodeSettings) throws -> EFQRCodeStyle {
+    private func makeStyle(
+        from settings: QRCodeSettings,
+        content: String,
+        qrPixelSize: Int
+    ) throws -> EFQRCodeStyle {
         let foregroundColor = settings.foregroundColor.uiColor.cgColor
         let backgroundColor = settings.backgroundColor.uiColor.cgColor
         let quietZone = settings.quietZone.fraction
         let style = settings.moduleStyle
-        let icon = try makeIcon(from: settings, borderColor: backgroundColor)
+        let icon = try makeIcon(
+            from: settings,
+            content: content,
+            qrPixelSize: qrPixelSize,
+            borderColor: backgroundColor
+        )
+
         let backdrop = EFStyleParamBackdrop(
             color: backgroundColor,
             quietzone: EFEdgeInsets(top: quietZone, left: quietZone, bottom: quietZone, right: quietZone)
@@ -186,20 +200,40 @@ struct QRCodeGeneratorService {
         )
     }
 
-    private func makeIcon(from settings: QRCodeSettings, borderColor: CGColor) throws -> EFStyleParamIcon? {
+    private func makeIcon(
+        from settings: QRCodeSettings,
+        content: String,
+        qrPixelSize: Int,
+        borderColor: CGColor
+    ) throws -> EFStyleParamIcon? {
         guard settings.hasCenterIcon else {
             return nil
         }
+
         guard
             let data = settings.centerIconImageData,
             let image = normalizedCGImage(from: data)
         else {
             throw QRCodeGeneratorError.iconDecodeFailed
         }
+
+        let resolvedScale = QRCodeCenterLogoPolicy.resolvedScale(
+            requestedScale: settings.centerIconScale,
+            content: content,
+            settings: settings,
+            qrPixelSize: qrPixelSize
+        )
+
+        #if DEBUG
+        print("Requested center icon scale: \(settings.centerIconScale)")
+        print("Resolved center icon scale: \(resolvedScale)")
+        print("QR correction level with icon: \(settings.errorCorrectionLevel.rawValue)")
+        #endif
+
         return EFStyleParamIcon(
             image: .static(image: image),
             borderColor: borderColor,
-            percentage: min(CGFloat(settings.centerIconScale), 0.24)
+            percentage: resolvedScale
         )
     }
 

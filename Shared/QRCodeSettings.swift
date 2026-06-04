@@ -143,7 +143,7 @@ struct QRCodeSettings: Codable, Equatable {
             moduleStyle: .square,
             centerIconEnabled: false,
             centerIconImageData: nil,
-            centerIconScale: 0.18,
+            centerIconScale: 0.20,
             visualEffect: .none,
             photoAlbumName: defaultPhotoAlbumName,
             createdAt: nil,
@@ -209,7 +209,7 @@ struct QRCodeSettings: Codable, Equatable {
         copy.outputSize = Self.automaticScanSafeDefaults.outputSize
         copy.quietZone = Self.automaticScanSafeDefaults.quietZone
         copy.moduleStyle = Self.automaticScanSafeDefaults.moduleStyle
-        copy.centerIconScale = Self.automaticScanSafeDefaults.centerIconScale
+        copy.centerIconScale = min(max(copy.centerIconScale, 0.10), 0.24)
         copy.visualEffect = Self.automaticScanSafeDefaults.visualEffect
         copy.photoAlbumName = copy.resolvedPhotoAlbumName
         return copy

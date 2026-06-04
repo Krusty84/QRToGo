@@ -33,6 +33,25 @@ struct SettingsView: View {
                         }
                         .buttonStyle(.plain)
 
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("settings.centerIconScale")
+                                Spacer()
+                                Text("\(Int(viewModel.draftSettings.centerIconScale * 100))%")
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Slider(
+                                value: $viewModel.draftSettings.centerIconScale,
+                                in: 0.14...0.24,
+                                step: 0.01
+                            )
+
+                            Text("settings.centerIconScaleHint")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+
                         if centerLogoImage != nil {
                             Button("settings.centerIconRemove", role: .destructive) {
                                 viewModel.removeCenterIcon()

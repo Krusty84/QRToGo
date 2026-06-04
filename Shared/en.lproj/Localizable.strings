@@ -90,6 +90,7 @@
 "settings.centerIconPick" = "Choose logo";
 "settings.centerIconRemove" = "Remove logo";
 "settings.centerIconScale" = "Logo size";
+"settings.centerIconScaleHint" = "Larger logos are more visible but may reduce QR readability. QRToGo automatically limits the final size for dense QR codes.";
 "settings.errorCorrection" = "Error correction";
 "settings.fixErrorsFirst" = "Resolve the remaining issues before saving.";
 "settings.foregroundColor" = "Foreground color";
