@@ -188,10 +188,6 @@ final class GenerateViewModel {
                     value: $0
                 )
             },
-            typeLine: QRCodeExportCardLine(
-                label: AppLocalization.string("export.card.type"),
-                value: AppLocalization.string(contentDraft.kind.titleKey)
-            ),
             createdLine: QRCodeExportCardLine(
                 label: AppLocalization.string("export.card.created"),
                 value: exportDateText(for: createdAt)

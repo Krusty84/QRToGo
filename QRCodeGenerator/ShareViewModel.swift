@@ -185,10 +185,6 @@ final class ShareViewModel {
                     value: $0
                 )
             },
-            typeLine: QRCodeExportCardLine(
-                label: AppLocalization.string("export.card.type"),
-                value: summary.typeText
-            ),
             createdLine: QRCodeExportCardLine(
                 label: AppLocalization.string("export.card.created"),
                 value: exportDateText(for: createdAt)

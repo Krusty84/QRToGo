@@ -21,7 +21,6 @@ struct QRCodeExportCardMetadata {
     let titleIconSystemName: String?
     let density: QRCodeExportCardDensity
     let detailLine: QRCodeExportCardLine?
-    let typeLine: QRCodeExportCardLine
     let createdLine: QRCodeExportCardLine
     let purposeLine: QRCodeExportCardLine?
 }
@@ -83,17 +82,13 @@ struct QRCodeExportCardRenderer {
             infoCardPath.stroke()
 
             drawAttributedText(
-                attributedLine(for: metadata.typeLine, alignment: .left, layout: layout),
-                in: layout.typeLineRect
-            )
-            drawAttributedText(
-                attributedLine(for: metadata.createdLine, alignment: .right, layout: layout),
+                attributedLine(for: metadata.createdLine, alignment: .left, layout: layout),
                 in: layout.createdLineRect
             )
 
             if let purposeLine = metadata.purposeLine, let purposeLineRect = layout.purposeLineRect {
                 drawAttributedText(
-                    attributedLine(for: purposeLine, alignment: .left, layout: layout),
+                    attributedLine(for: purposeLine, alignment: .right, layout: layout),
                     in: purposeLineRect
                 )
             }
@@ -306,7 +301,6 @@ private struct QRCodeExportCardLayout {
     let detailLineRect: CGRect?
     let qrRect: CGRect
     let infoCardRect: CGRect
-    let typeLineRect: CGRect
     let createdLineRect: CGRect
     let purposeLineRect: CGRect?
 
@@ -334,7 +328,6 @@ private struct QRCodeExportCardLayout {
         let qrBottomSpacing: CGFloat = 56
         let bottomPadding: CGFloat = 84
         let infoInnerPadding: CGFloat = 36
-        let purposeSpacing: CGFloat = 18
         let topRowSpacing: CGFloat = 24
 
         let contentWidth = canvasWidth - (horizontalPadding * 2)
@@ -369,36 +362,32 @@ private struct QRCodeExportCardLayout {
         let infoCardWidth = canvasWidth - (horizontalPadding * 2)
         let infoTextWidth = infoCardWidth - (infoInnerPadding * 2)
         let infoCardOriginY = qrRect.maxY + qrBottomSpacing
+        
         let topRowY = infoCardOriginY + infoInnerPadding
         let topRowHeight = ceil(max(infoLabelFont.lineHeight, infoValueFont.lineHeight))
         let leadingColumnWidth = floor(infoTextWidth * 0.38)
         let trailingColumnWidth = infoTextWidth - leadingColumnWidth - topRowSpacing
 
-        let typeLineRect = CGRect(
+        let createdLineRect = CGRect(
             x: horizontalPadding + infoInnerPadding,
             y: topRowY,
             width: leadingColumnWidth,
             height: topRowHeight
         ).integral
-        let createdLineRect = CGRect(
-            x: typeLineRect.maxX + topRowSpacing,
-            y: topRowY,
-            width: trailingColumnWidth,
-            height: topRowHeight
-        ).integral
 
-        var currentY = topRowY + topRowHeight
-        var purposeLineRect: CGRect?
+        let purposeLineRect: CGRect?
         if metadata.purposeLine != nil {
-            currentY += purposeSpacing
             purposeLineRect = CGRect(
-                x: horizontalPadding + infoInnerPadding,
-                y: currentY,
-                width: infoTextWidth,
-                height: ceil(infoValueFont.lineHeight * 2.15)
+                x: createdLineRect.maxX + topRowSpacing,
+                y: topRowY,
+                width: trailingColumnWidth,
+                height: topRowHeight
             ).integral
-            currentY = purposeLineRect!.maxY
+        } else {
+            purposeLineRect = nil
         }
+
+        let currentY = topRowY + topRowHeight
 
         let infoCardRect = CGRect(
             x: horizontalPadding,
@@ -415,7 +404,6 @@ private struct QRCodeExportCardLayout {
         self.detailLineRect = detailLineRect
         self.qrRect = qrRect
         self.infoCardRect = infoCardRect
-        self.typeLineRect = typeLineRect
         self.createdLineRect = createdLineRect
         self.purposeLineRect = purposeLineRect
     }
