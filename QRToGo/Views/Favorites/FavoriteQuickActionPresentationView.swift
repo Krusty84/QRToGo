@@ -20,21 +20,10 @@ struct FavoriteQuickActionPresentationView: View {
 
     var body: some View {
         QuickActionPresentationContainer {
-            VStack(spacing: 16) {
+            VStack(spacing: 18) {
+                quickActionHeader
+
                 qrPreview
-
-                Text(favorite.name)
-                    .font(.title3.weight(.semibold))
-                    .multilineTextAlignment(.center)
-                    .lineLimit(3)
-
-                Label {
-                    Text(LocalizedStringKey(favorite.kind.titleKey))
-                } icon: {
-                    Image(systemName: favorite.kind.systemImage)
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
 
                 Button("favorites.quickAction.close", action: onClose)
                     .buttonStyle(.borderedProminent)
@@ -47,6 +36,31 @@ struct FavoriteQuickActionPresentationView: View {
         .task(id: favorite) {
             generatePreview()
         }
+    }
+
+    private var quickActionHeader: some View {
+        VStack(spacing: 8) {
+            Text("export.card.title")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            HStack(spacing: 8) {
+                Image(systemName: favorite.kind.systemImage)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+
+                Text(favorite.name)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .accessibilityElement(children: .combine)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
