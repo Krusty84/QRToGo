@@ -54,6 +54,7 @@ final class GenerateViewModel {
 
     func refreshPreview(using settings: QRCodeSettings) {
         previewTask?.cancel()
+        previewImage = nil
         previewErrorMessage = nil
         isGeneratingPreview = true
 

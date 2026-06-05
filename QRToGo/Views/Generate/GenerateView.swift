@@ -77,6 +77,10 @@ struct GenerateView: View {
                     }
 
                     Button {
+                        guard isSaveToPhotosDisabled == false else {
+                            return
+                        }
+
                         Task {
                             await viewModel.savePreviewToPhotos(using: settingsViewModel.draftSettings)
                         }
@@ -85,14 +89,20 @@ struct GenerateView: View {
                             ProgressView()
                         } else {
                             Label("settings.savePreview", systemImage: "photo.badge.plus")
+                                .foregroundStyle(isSaveToPhotosDisabled ? Color.secondary : Color.accentColor)
                         }
                     }
                     .disabled(isSaveToPhotosDisabled)
 
                     Button {
+                        guard isAddToFavoriteDisabled == false else {
+                            return
+                        }
+
                         isFavoriteSheetPresented = true
                     } label: {
                         Label("favorites.add.button", systemImage: "text.badge.star")
+                            .foregroundStyle(isAddToFavoriteDisabled ? Color.secondary : Color.accentColor)
                     }
                     .disabled(isAddToFavoriteDisabled)
                 }
@@ -330,7 +340,7 @@ struct GenerateView: View {
             || viewModel.hasGeneratedQRCode == false
             || settingsViewModel.hasBlockingValidation
     }
-    
+
     private var isAddToFavoriteDisabled: Bool {
         viewModel.hasGeneratedQRCode == false
             || settingsViewModel.hasBlockingValidation
