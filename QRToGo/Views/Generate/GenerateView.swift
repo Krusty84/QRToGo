@@ -72,25 +72,8 @@ struct GenerateView: View {
                         errorMessage: viewModel.previewErrorMessage
                     )
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Label("settings.scannability", systemImage: "checkmark.shield")
-                            .font(.headline)
-
-                        if settingsViewModel.validationResults.isEmpty {
-                            Text("settings.scannability.safe")
-                                .font(.subheadline)
-                                .foregroundStyle(.green)
-                        } else {
-                            ForEach(settingsViewModel.validationResults) { result in
-                                Label {
-                                    Text(LocalizedStringKey(result.messageKey))
-                                } icon: {
-                                    Image(systemName: result.severity == .error ? "exclamationmark.triangle.fill" : "exclamationmark.circle")
-                                        .foregroundStyle(result.severity == .error ? .orange : .yellow)
-                                }
-                                .font(.subheadline)
-                            }
-                        }
+                    if viewModel.hasGeneratedQRCode {
+                        qrQualityView
                     }
 
                     Button {
@@ -104,11 +87,7 @@ struct GenerateView: View {
                             Label("settings.savePreview", systemImage: "photo.badge.plus")
                         }
                     }
-                    .disabled(
-                        viewModel.isSavingPreview
-                            || viewModel.isGeneratingPreview
-                            || settingsViewModel.hasBlockingValidation
-                    )
+                    .disabled(isSaveToPhotosDisabled)
 
                     Button {
                         isFavoriteSheetPresented = true
@@ -127,6 +106,11 @@ struct GenerateView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    focusedField = nil
+                }
+            )
             .navigationTitle("tab.generate")
         }
         .sheet(isPresented: $isContactPickerPresented) {
@@ -302,6 +286,29 @@ struct GenerateView: View {
                 .focused($focusedField, equals: .locationLabel)
         }
     }
+    
+    private var qrQualityView: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("settings.scannability", systemImage: "checkmark.shield")
+                .font(.headline)
+
+            if settingsViewModel.validationResults.isEmpty {
+                Text("settings.scannability.safe")
+                    .font(.subheadline)
+                    .foregroundStyle(.green)
+            } else {
+                ForEach(settingsViewModel.validationResults) { result in
+                    Label {
+                        Text(LocalizedStringKey(result.messageKey))
+                    } icon: {
+                        Image(systemName: result.severity == .error ? "exclamationmark.triangle.fill" : "exclamationmark.circle")
+                            .foregroundStyle(result.severity == .error ? .orange : .yellow)
+                    }
+                    .font(.subheadline)
+                }
+            }
+        }
+    }
 
     private func placeholderCard(_ titleKey: LocalizedStringKey, systemImage: String) -> some View {
         VStack(spacing: 10) {
@@ -318,8 +325,14 @@ struct GenerateView: View {
         .background(Color(uiColor: .secondarySystemBackground), in: .rect(cornerRadius: 18))
     }
 
+    private var isSaveToPhotosDisabled: Bool {
+        viewModel.isSavingPreview
+            || viewModel.hasGeneratedQRCode == false
+            || settingsViewModel.hasBlockingValidation
+    }
+    
     private var isAddToFavoriteDisabled: Bool {
-        viewModel.isGeneratingPreview
+        viewModel.hasGeneratedQRCode == false
             || settingsViewModel.hasBlockingValidation
             || viewModel.canMakeFavoriteQRCode(using: settingsViewModel.draftSettings) == false
     }

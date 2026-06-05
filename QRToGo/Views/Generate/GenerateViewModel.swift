@@ -23,7 +23,12 @@ final class GenerateViewModel {
     var statusMessage: String?
     var isGeneratingPreview = false
     var isSavingPreview = false
-
+    var hasGeneratedQRCode: Bool {
+        previewImage != nil
+            && previewErrorMessage == nil
+            && isGeneratingPreview == false
+    }
+    
     private var previewTask: Task<Void, Never>?
 
     init(
