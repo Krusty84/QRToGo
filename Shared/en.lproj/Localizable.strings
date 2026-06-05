@@ -111,6 +111,7 @@
 "favorites.suggestions" = "Suggested names";
 "favorites.title" = "Favorites";
 "favorites.updated" = "Updated";
+"favorites.delete.message" = "Are you sure you want to remove this item?";
 "settings.albumName" = "Album name";
 "settings.appLanguage" = "App language";
 "settings.backgroundColor" = "Background color";

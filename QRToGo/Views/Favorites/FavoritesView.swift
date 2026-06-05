@@ -14,6 +14,7 @@ struct FavoritesView: View {
 
     @State private var path: [UUID] = []
     @State private var favoriteToRename: FavoriteQRCode?
+    @State private var favoriteToDelete: FavoriteQRCode?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -40,6 +41,23 @@ struct FavoritesView: View {
             FavoriteRenameSheet(initialName: favorite.name) { name in
                 renameFavorite(favorite, to: name)
             }
+        }
+        .confirmationDialog(
+            "favorites.delete.confirm",
+            isPresented: deleteConfirmationBinding,
+            titleVisibility: .visible
+        ) {
+            if let favoriteToDelete {
+                Button("favorites.delete", role: .destructive) {
+                    deleteFavoriteConfirmed(favoriteToDelete)
+                }
+            }
+
+            Button("share.cancel", role: .cancel) {
+                favoriteToDelete = nil
+            }
+        } message: {
+            Text("favorites.delete.message")
         }
     }
 
@@ -75,8 +93,8 @@ struct FavoritesView: View {
                         onRename: {
                             favoriteToRename = favorite
                         },
-                        onDelete: {
-                            deleteFavorite(favorite)
+                        onDeleteRequest: {
+                            favoriteToDelete = favorite
                         }
                     )
                 }
@@ -111,11 +129,24 @@ struct FavoritesView: View {
         }
     }
 
-    private func deleteFavorite(_ favorite: FavoriteQRCode) {
+    private var deleteConfirmationBinding: Binding<Bool> {
+        Binding(
+            get: { favoriteToDelete != nil },
+            set: { isPresented in
+                if isPresented == false {
+                    favoriteToDelete = nil
+                }
+            }
+        )
+    }
+    
+    private func deleteFavoriteConfirmed(_ favorite: FavoriteQRCode) {
         do {
             try viewModel.deleteFavorite(id: favorite.id)
+            favoriteToDelete = nil
         } catch {
             viewModel.statusMessage = error.localizedDescription
+            favoriteToDelete = nil
         }
     }
 }
@@ -147,34 +178,25 @@ private struct FavoriteRow: View {
 private struct FavoriteListRow: View {
     let favorite: FavoriteQRCode
     let onRename: () -> Void
-    let onDelete: () -> Void
-
-    @State private var isDeleteConfirmationPresented = false
+    let onDeleteRequest: () -> Void
 
     var body: some View {
         NavigationLink(value: favorite.id) {
             FavoriteRow(favorite: favorite)
         }
-        .swipeActions {
-            Button("favorites.delete", role: .destructive) {
-                isDeleteConfirmationPresented = true
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                onDeleteRequest()
+            } label: {
+                Label("favorites.delete", systemImage: "trash")
             }
 
-            Button("favorites.rename") {
+            Button {
                 onRename()
+            } label: {
+                Label("favorites.rename", systemImage: "pencil")
             }
-            .tint(.blue)
-        }
-        .confirmationDialog(
-            "favorites.delete.confirm",
-            isPresented: $isDeleteConfirmationPresented,
-            titleVisibility: .visible
-        ) {
-            Button("favorites.delete", role: .destructive) {
-                onDelete()
-            }
-
-            Button("share.cancel", role: .cancel) { }
+            .tint(.gray)
         }
     }
 }
@@ -257,7 +279,10 @@ private struct FavoriteDetailView: View {
                 Button("favorites.delete", role: .destructive) {
                     deleteFavorite()
                 }
+
                 Button("share.cancel", role: .cancel) { }
+            } message: {
+                Text("favorites.delete.message")
             }
         } else {
             ContentUnavailableView(

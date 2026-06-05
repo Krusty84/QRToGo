@@ -111,6 +111,7 @@
 "favorites.suggestions" = "建议名称";
 "favorites.title" = "收藏";
 "favorites.updated" = "更新时间";
+"favorites.delete.message" = "确定要移除此项目吗？";
 "settings.albumName" = "相簿名称";
 "settings.appLanguage" = "应用语言";
 "settings.backgroundColor" = "背景颜色";
