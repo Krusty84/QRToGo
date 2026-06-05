@@ -16,7 +16,7 @@ enum FavoriteQuickActionConstants {
 final class FavoriteQuickActionService {
     func updateShortcuts(from favorites: [FavoriteQRCode]) {
         let shortcutItems = favorites
-            .sorted { $0.updatedAt > $1.updatedAt }
+            .sorted(by: quickActionSort)
             .prefix(4)
             .map { favorite in
                 UIApplicationShortcutItem(
@@ -31,5 +31,24 @@ final class FavoriteQuickActionService {
             }
 
         UIApplication.shared.shortcutItems = Array(shortcutItems)
+    }
+    
+    private func quickActionSort(_ lhs: FavoriteQRCode, _ rhs: FavoriteQRCode) -> Bool {
+        let lhsRank = FavoriteDefaultNames.quickActionSortRank(for: lhs.name)
+        let rhsRank = FavoriteDefaultNames.quickActionSortRank(for: rhs.name)
+
+        switch (lhsRank, rhsRank) {
+        case let (lhsRank?, rhsRank?):
+            return lhsRank < rhsRank
+
+        case (_?, nil):
+            return true
+
+        case (nil, _?):
+            return false
+
+        case (nil, nil):
+            return lhs.updatedAt > rhs.updatedAt
+        }
     }
 }

@@ -40,6 +40,12 @@ final class FavoritesViewModel {
     }
 
     func addFavorite(_ favorite: FavoriteQRCode) throws {
+        if FavoriteDefaultNames.isDefaultName(favorite.name),
+           FavoriteDefaultNames.isUsed(favorite.name, in: favorites)
+        {
+            throw FavoriteQRCodeValidationError.duplicateDefaultName
+        }
+
         favorites = try store.addFavorite(favorite)
         statusMessage = AppLocalization.string("favorites.add.success")
         quickActionService.updateShortcuts(from: favorites)
@@ -50,6 +56,18 @@ final class FavoritesViewModel {
         guard trimmedName.isEmpty == false else {
             return
         }
+
+        if FavoriteDefaultNames.isDefaultName(trimmedName) {
+            let isUsedByAnotherFavorite = favorites.contains { favorite in
+                favorite.id != id
+                    && FavoriteDefaultNames.normalized(favorite.name) == FavoriteDefaultNames.normalized(trimmedName)
+            }
+
+            if isUsedByAnotherFavorite {
+                throw FavoriteQRCodeValidationError.duplicateDefaultName
+            }
+        }
+
         favorites = try store.renameFavorite(id: id, name: trimmedName)
         statusMessage = nil
         quickActionService.updateShortcuts(from: favorites)
@@ -71,5 +89,16 @@ final class FavoritesViewModel {
             settings: favorite.settings,
             outputSize: min(max(favorite.settings.outputSize, 360), 768)
         ).image
+    }
+}
+
+enum FavoriteQRCodeValidationError: LocalizedError {
+    case duplicateDefaultName
+
+    var errorDescription: String? {
+        switch self {
+        case .duplicateDefaultName:
+            AppLocalization.string("favorites.defaultNameAlreadyUsed")
+        }
     }
 }

@@ -105,6 +105,9 @@
 "favorites.suggestion.myContact" = "My Contact";
 "favorites.suggestion.myEmergency" = "My Emergency";
 "favorites.suggestion.myWebsite" = "My Website";
+"favorites.suggestion.myTarget" = "My Target";
+"favorites.suggestion.myHome" = "My Home";
+"favorites.defaultNameAlreadyUsed" = "This default favorite name is already used.";
 "favorites.suggestions" = "Suggested names";
 "favorites.title" = "Favorites";
 "favorites.updated" = "Updated";

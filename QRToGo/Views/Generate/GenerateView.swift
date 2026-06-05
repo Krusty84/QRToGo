@@ -141,7 +141,11 @@ struct GenerateView: View {
             )
         }
         .sheet(isPresented: $isFavoriteSheetPresented) {
-            AddFavoriteSheet { name in
+            AddFavoriteSheet(
+                availableSuggestionNames: FavoriteDefaultNames.availableNames(
+                    for: favoritesViewModel.favorites
+                )
+            ) { name in
                 addFavorite(named: name)
             }
         }
@@ -345,6 +349,7 @@ private struct AddFavoriteSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
 
+    let availableSuggestionNames: [String]
     let onAdd: (String) -> Void
 
     var body: some View {
@@ -355,10 +360,12 @@ private struct AddFavoriteSheet: View {
                         .textInputAutocapitalization(.words)
                 }
 
-                Section("favorites.suggestions") {
-                    suggestionButton("favorites.suggestion.myContact")
-                    suggestionButton("favorites.suggestion.myEmergency")
-                    suggestionButton("favorites.suggestion.myWebsite")
+                if availableSuggestionNames.isEmpty == false {
+                    Section("favorites.suggestions") {
+                        ForEach(availableSuggestionNames, id: \.self) { suggestionName in
+                            suggestionButton(suggestionName)
+                        }
+                    }
                 }
             }
             .navigationTitle("favorites.add.title")
@@ -384,9 +391,9 @@ private struct AddFavoriteSheet: View {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func suggestionButton(_ titleKey: String) -> some View {
-        Button(LocalizedStringKey(titleKey)) {
-            name = AppLocalization.string(titleKey)
+    private func suggestionButton(_ suggestionName: String) -> some View {
+        Button(suggestionName) {
+            name = suggestionName
         }
     }
 }
