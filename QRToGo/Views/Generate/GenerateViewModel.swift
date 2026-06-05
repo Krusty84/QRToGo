@@ -377,8 +377,8 @@ final class GenerateViewModel {
     private func exportDateText(for date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = AppLanguageStore().load().locale
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.dateFormat = "d MMM yy"
         return formatter.string(from: date)
     }
 

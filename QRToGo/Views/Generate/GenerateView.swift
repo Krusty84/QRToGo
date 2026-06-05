@@ -110,8 +110,10 @@ struct GenerateView: View {
                             || settingsViewModel.hasBlockingValidation
                     )
 
-                    Button("favorites.add.button", systemImage: "star.badge.plus") {
+                    Button {
                         isFavoriteSheetPresented = true
+                    } label: {
+                        Label("favorites.add.button", systemImage: "text.badge.star")
                     }
                     .disabled(isAddToFavoriteDisabled)
                 }

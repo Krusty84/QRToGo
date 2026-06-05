@@ -57,9 +57,7 @@ struct QRCodeGeneratorService {
             results.append(.init(severity: .warning, messageKey: "validation.iconMissing.warning"))
         }
 
-        if settings.centerIconScale > 0.24 {
-            results.append(.init(severity: .error, messageKey: "validation.iconTooLarge.error"))
-        } else if settings.centerIconScale > 0.20 {
+        if settings.hasCenterIcon && settings.centerIconScale > 0.23 {
             results.append(.init(severity: .warning, messageKey: "validation.iconTooLarge.warning"))
         }
 

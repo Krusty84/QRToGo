@@ -88,7 +88,12 @@ struct QRCodeExportCardRenderer {
 
             if let purposeLine = metadata.purposeLine, let purposeLineRect = layout.purposeLineRect {
                 drawAttributedText(
-                    attributedLine(for: purposeLine, alignment: .right, layout: layout),
+                    attributedLine(
+                        for: purposeLine,
+                        alignment: .left,
+                        layout: layout,
+                        lineBreakMode: .byWordWrapping
+                    ),
                     in: purposeLineRect
                 )
             }
@@ -193,11 +198,12 @@ struct QRCodeExportCardRenderer {
     private func attributedLine(
         for line: QRCodeExportCardLine,
         alignment: NSTextAlignment,
-        layout: QRCodeExportCardLayout
+        layout: QRCodeExportCardLayout,
+        lineBreakMode: NSLineBreakMode = .byTruncatingTail
     ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
-        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.lineBreakMode = lineBreakMode
 
         let attributedText = NSMutableAttributedString(
             string: "\(line.label): ",
@@ -376,18 +382,29 @@ private struct QRCodeExportCardLayout {
         ).integral
 
         let purposeLineRect: CGRect?
-        if metadata.purposeLine != nil {
+        if let purposeLine = metadata.purposeLine {
+            let purposeHeight = Self.infoLineHeight(
+                for: purposeLine,
+                width: trailingColumnWidth,
+                labelFont: infoLabelFont,
+                valueFont: infoValueFont,
+                maxLines: 3
+            )
+
             purposeLineRect = CGRect(
                 x: createdLineRect.maxX + topRowSpacing,
                 y: topRowY,
                 width: trailingColumnWidth,
-                height: topRowHeight
+                height: purposeHeight
             ).integral
         } else {
             purposeLineRect = nil
         }
 
-        let currentY = topRowY + topRowHeight
+        let currentY = max(
+            createdLineRect.maxY,
+            purposeLineRect?.maxY ?? createdLineRect.maxY
+        )
 
         let infoCardRect = CGRect(
             x: horizontalPadding,
@@ -406,6 +423,44 @@ private struct QRCodeExportCardLayout {
         self.infoCardRect = infoCardRect
         self.createdLineRect = createdLineRect
         self.purposeLineRect = purposeLineRect
+    }
+    
+    private static func infoLineHeight(
+        for line: QRCodeExportCardLine,
+        width: CGFloat,
+        labelFont: UIFont,
+        valueFont: UIFont,
+        maxLines: Int
+    ) -> CGFloat {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = .byWordWrapping
+
+        let attributedText = NSMutableAttributedString(
+            string: "\(line.label): ",
+            attributes: [
+                .font: labelFont,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
+
+        attributedText.append(
+            NSAttributedString(
+                string: line.value,
+                attributes: [
+                    .font: valueFont,
+                    .paragraphStyle: paragraphStyle
+                ]
+            )
+        )
+
+        let measuredRect = attributedText.boundingRect(
+            with: CGSize(width: width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            context: nil
+        )
+
+        let maxHeight = ceil(max(labelFont.lineHeight, valueFont.lineHeight) * CGFloat(maxLines))
+        return min(ceil(measuredRect.height), maxHeight)
     }
 
     private static func qrSize(
