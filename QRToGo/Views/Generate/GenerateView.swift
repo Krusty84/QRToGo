@@ -13,7 +13,6 @@ struct GenerateView: View {
     let favoritesViewModel: FavoritesViewModel
     @State private var isContactPickerPresented = false
     @State private var isFavoriteSheetPresented = false
-    @State private var isLocationMapPickerPresented = false
     @State private var isFullScreenLocationMapPresented = false
     @State private var saveToPhotosFeedback: ActionFeedback?
     @State private var addToFavoriteFeedback: ActionFeedback?
@@ -166,14 +165,6 @@ struct GenerateView: View {
                 )
             ) { name in
                 addFavorite(named: name)
-            }
-        }
-        .sheet(isPresented: $isLocationMapPickerPresented) {
-            LocationMapPickerView(
-                initialSelection: viewModel.selectedLocation
-            ) { selection in
-                viewModel.setSelectedLocation(selection)
-                isLocationMapPickerPresented = false
             }
         }
         .fullScreenCover(isPresented: $isFullScreenLocationMapPresented) {

@@ -2,23 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Location access is used only to fill latitude and longitude for a location QR code.</string>
 	<key>NSExtension</key>
 	<dict>
+		<key>NSExtensionAttributes</key>
+		<dict>
+			<key>NSExtensionActivationRule</key>
+			<string>SUBQUERY ( extensionItems, $extensionItem, SUBQUERY ( $extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.contact" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.vcard" ).@count == $extensionItem.attachments.@count &amp;&amp; $extensionItem.attachments.@count &lt;= 20 ).@count &gt;= 1</string>
+		</dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.share-services</string>
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).ShareRootViewController</string>
-		<key>NSExtensionAttributes</key>
-		<dict>
-			<key>NSExtensionActivationRule</key>
-			<string>SUBQUERY ( extensionItems, $extensionItem, SUBQUERY ( $extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.url&quot; || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.contact&quot; || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.vcard&quot; ).@count == $extensionItem.attachments.@count &amp;&amp; $extensionItem.attachments.@count &lt;= 20 ).@count &gt;= 1</string>
-		</dict>
 	</dict>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Read and write Photos access is required to save QR codes to Photos.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Photos access is required to save generated QR codes.</string>
 </dict>
 </plist>
