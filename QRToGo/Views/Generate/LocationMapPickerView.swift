@@ -72,33 +72,6 @@ struct LocationMapPickerView: View {
 
                         selectedCoordinate = coordinate
                     }
-                    .overlay(alignment: .bottomTrailing) {
-                        Button {
-                            locationProvider.requestCurrentLocation()
-                        } label: {
-                            Label("generate.locationUseCurrent", systemImage: "location.fill")
-                                .labelStyle(.iconOnly)
-                                .font(.title3)
-                                .padding(14)
-                                .background(.regularMaterial, in: Circle())
-                        }
-                        .padding()
-                    }
-                    .onReceive(locationProvider.$currentSelection.compactMap { $0 }) { selection in
-                        let coordinate = CLLocationCoordinate2D(
-                            latitude: selection.latitude,
-                            longitude: selection.longitude
-                        )
-
-                        selectedCoordinate = coordinate
-
-                        cameraPosition = .region(
-                            MKCoordinateRegion(
-                                center: coordinate,
-                                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                            )
-                        )
-                    }
                 }
 
                 Form {
