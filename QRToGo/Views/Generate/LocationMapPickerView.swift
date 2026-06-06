@@ -30,9 +30,7 @@ struct LocationMapPickerView: View {
             CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
         } ?? CLLocationCoordinate2D(latitude: 52.3676, longitude: 4.9041)
 
-        _selectedCoordinate = State(initialValue: initialSelection.map {
-            CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
-        })
+        _selectedCoordinate = State(initialValue: initialCoordinate)
 
         _label = State(initialValue: initialSelection?.label ?? "")
 
@@ -52,25 +50,16 @@ struct LocationMapPickerView: View {
                 MapReader { proxy in
                     Map(position: $cameraPosition, interactionModes: .all) {
                         UserAnnotation()
-
-                        if let selectedCoordinate {
-                            Marker(
-                                AppLocalization.string("generate.locationSelected"),
-                                coordinate: selectedCoordinate
-                            )
-                        }
                     }
                     .mapControls {
-                        MapUserLocationButton()
                         MapCompass()
                         MapScaleView()
                     }
-                    .onTapGesture { point in
-                        guard let coordinate = proxy.convert(point, from: .local) else {
-                            return
-                        }
-
-                        selectedCoordinate = coordinate
+                    .overlay {
+                        centerPin
+                    }
+                    .onMapCameraChange(frequency: .continuous) { context in
+                        selectedCoordinate = context.region.center
                     }
                 }
 
@@ -164,5 +153,18 @@ struct LocationMapPickerView: View {
 
     private func formattedCoordinate(_ value: Double) -> String {
         String(format: "%.6f", value)
+    }
+    
+    private var centerPin: some View {
+        VStack(spacing: 0) {
+            Image(systemName: "mappin")
+                .font(.system(size: 34, weight: .semibold))
+
+            Circle()
+                .frame(width: 6, height: 6)
+        }
+        .offset(y: -18)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

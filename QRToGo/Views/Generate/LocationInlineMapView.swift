@@ -25,21 +25,12 @@ struct LocationInlineMapView: View {
         MapReader { proxy in
             Map(position: $cameraPosition, interactionModes: .all) {
                 UserAnnotation()
-
-                if let selection {
-                    Marker(
-                        selection.label.isEmpty
-                            ? AppLocalization.string("generate.locationSelected")
-                            : selection.label,
-                        coordinate: CLLocationCoordinate2D(
-                            latitude: selection.latitude,
-                            longitude: selection.longitude
-                        )
-                    )
-                }
             }
             .frame(height: 220)
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                centerPin
+            }
             .overlay(alignment: .topTrailing) {
                 Button {
                     onOpenFullScreen()
@@ -53,10 +44,8 @@ struct LocationInlineMapView: View {
                 .padding(10)
                 .accessibilityLabel(Text("generate.locationOpenFullScreen"))
             }
-            .onTapGesture { point in
-                guard let coordinate = proxy.convert(point, from: .local) else {
-                    return
-                }
+            .onMapCameraChange(frequency: .onEnd) { context in
+                let coordinate = context.region.center
 
                 onSelect(
                     GenerateLocationSelection(
@@ -89,5 +78,18 @@ struct LocationInlineMapView: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
             )
         )
+    }
+    
+    private var centerPin: some View {
+        VStack(spacing: 0) {
+            Image(systemName: "mappin")
+                .font(.system(size: 30, weight: .semibold))
+
+            Circle()
+                .frame(width: 5, height: 5)
+        }
+        .offset(y: -16)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
