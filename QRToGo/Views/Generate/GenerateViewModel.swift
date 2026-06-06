@@ -112,11 +112,17 @@ final class GenerateViewModel {
         contentDraft.contact = nil
     }
 
-    func savePreviewToPhotos(using settings: QRCodeSettings) async {
+    @discardableResult
+    func savePreviewToPhotos(using settings: QRCodeSettings) async -> Bool {
+        guard hasGeneratedQRCode, previewImage != nil else {
+            statusMessage = nil
+            return false
+        }
+
         let validationResults = generatorService.validationResults(for: settings)
         guard validationResults.contains(where: { $0.severity == .error }) == false else {
-            statusMessage = AppLocalization.string("settings.fixErrorsFirst")
-            return
+            statusMessage = nil
+            return false
         }
 
         isSavingPreview = true
@@ -141,12 +147,12 @@ final class GenerateViewModel {
                 albumName: normalizedSettings.photoAlbumName,
                 originalFilename: searchMetadata.originalFilename
             )
-            statusMessage = String.localizedStringWithFormat(
-                AppLocalization.string("settings.savePreviewSuccess"),
-                normalizedSettings.photoAlbumName
-            )
+
+            statusMessage = nil
+            return true
         } catch {
-            statusMessage = error.localizedDescription
+            statusMessage = nil
+            return false
         }
     }
 
@@ -318,14 +324,14 @@ final class GenerateViewModel {
                 keywordValues: [ssid, security],
                 filenameHint: ssid
             )
-        case .email:
-            let recipient = contentDraft.emailTo.nonEmpty
-            return ExportSafeSummary(
-                detailLabelKey: "export.card.details",
-                detailValue: recipient,
-                keywordValues: [recipient].compactMap { $0 },
-                filenameHint: recipient
-            )
+            case .email:
+                let recipient = contentDraft.emailTo.nonEmpty
+                return ExportSafeSummary(
+                    detailLabelKey: "export.card.details",
+                    detailValue: recipient,
+                    keywordValues: [recipient].compactMap { $0 },
+                    filenameHint: recipient
+                )
         case .sms:
             let number = contentDraft.smsNumber.nonEmpty
             return ExportSafeSummary(
@@ -380,6 +386,28 @@ final class GenerateViewModel {
         }
     }
 
+    private func isValidEmailRecipientList(_ value: String) -> Bool {
+        let recipients = value
+            .split(whereSeparator: { $0 == "," || $0 == ";" })
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+
+        guard recipients.isEmpty == false else {
+            return false
+        }
+
+        return recipients.allSatisfy(isValidSingleEmailAddress)
+    }
+
+    private func isValidSingleEmailAddress(_ value: String) -> Bool {
+        let pattern = #"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$"#
+
+        return value.range(
+            of: pattern,
+            options: [.regularExpression, .caseInsensitive]
+        ) != nil
+    }
+    
     private func exportDateText(for date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = AppLanguageStore().load().locale
@@ -496,6 +524,9 @@ final class GenerateViewModel {
             let recipient = contentDraft.emailTo.trimmingCharacters(in: .whitespacesAndNewlines)
             guard recipient.isEmpty == false else {
                 throw GenerateContentError.emailRecipientMissing
+            }
+            guard isValidEmailRecipientList(recipient) else {
+                throw GenerateContentError.emailRecipientInvalid
             }
             return emailPayload(for: recipient)
         case .sms:

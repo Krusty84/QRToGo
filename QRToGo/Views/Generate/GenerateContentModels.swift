@@ -108,6 +108,7 @@ enum GenerateContentError: LocalizedError {
     case wifiSSIDMissing
     case wifiPasswordMissing
     case emailRecipientMissing
+    case emailRecipientInvalid
     case smsNumberMissing
     case phoneNumberMissing
     case eventTitleMissing
@@ -128,6 +129,8 @@ enum GenerateContentError: LocalizedError {
             AppLocalization.string("error.generateWiFiPasswordMissing")
         case .emailRecipientMissing:
             AppLocalization.string("error.generateEmailRecipientMissing")
+        case .emailRecipientInvalid:
+            AppLocalization.string("error.generateEmailRecipientInvalid")
         case .smsNumberMissing:
             AppLocalization.string("error.generateSMSNumberMissing")
         case .phoneNumberMissing:

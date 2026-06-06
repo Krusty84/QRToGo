@@ -9,6 +9,7 @@
 "error.localFileImport" = "无法导入共享的本地文件。";
 "error.generateContactMissing" = "请先选择联系人，再生成联系人二维码。";
 "error.generateEmailRecipientMissing" = "请至少输入一个电子邮箱收件人。";
+"error.generateEmailRecipientInvalid" = "请输入有效的电子邮箱地址。";
 "error.generateEventDateRangeInvalid" = "活动结束时间必须晚于开始时间。";
 "error.generateEventTitleMissing" = "请输入活动标题。";
 "error.generateWebsiteInvalid" = "请输入有效的网站链接。";
@@ -45,7 +46,6 @@
 "generate.contactPlaceholder" = "从通讯录中选择联系人。";
 "generate.contactRemove" = "移除联系人";
 "generate.exportPurpose" = "保存图片说明";
-"generate.exportPurposeFooter" = "保存到“照片”时，这段说明会显示在二维码下方。";
 "generate.emailBody" = "邮件正文";
 "generate.emailRecipient" = "电子邮箱收件人";
 "generate.emailSubject" = "邮件主题";

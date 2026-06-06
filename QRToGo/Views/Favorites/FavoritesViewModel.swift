@@ -47,7 +47,7 @@ final class FavoritesViewModel {
         }
 
         favorites = try store.addFavorite(favorite)
-        statusMessage = AppLocalization.string("favorites.add.success")
+        statusMessage = nil
         quickActionService.updateShortcuts(from: favorites)
     }
 

@@ -13,6 +13,8 @@ struct GenerateView: View {
     let favoritesViewModel: FavoritesViewModel
     @State private var isContactPickerPresented = false
     @State private var isFavoriteSheetPresented = false
+    @State private var saveToPhotosFeedback: ActionFeedback?
+    @State private var addToFavoriteFeedback: ActionFeedback?
     @FocusState private var focusedField: FocusedField?
 
     private let modeColumns = [
@@ -58,10 +60,6 @@ struct GenerateView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         TextField("generate.exportPurpose", text: $viewModel.exportPurposeDraft, axis: .vertical)
                             .lineLimit(3, reservesSpace: true)
-
-                        Text("generate.exportPurposeFooter")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -82,17 +80,30 @@ struct GenerateView: View {
                         }
 
                         Task {
-                            await viewModel.savePreviewToPhotos(using: settingsViewModel.draftSettings)
+                            let isSuccess = await viewModel.savePreviewToPhotos(
+                                using: settingsViewModel.draftSettings
+                            )
+
+                            withAnimation(.snappy) {
+                                saveToPhotosFeedback = isSuccess ? .success : .failure
+                            }
                         }
                     } label: {
-                        if viewModel.isSavingPreview {
-                            ProgressView()
-                        } else {
-                            Label("settings.savePreview", systemImage: "photo.badge.plus")
-                                .foregroundStyle(isSaveToPhotosDisabled ? Color.secondary : Color.accentColor)
+                        HStack {
+                            if viewModel.isSavingPreview {
+                                ProgressView()
+                            } else {
+                                Label("settings.savePreview", systemImage: "photo.badge.plus")
+                                    .foregroundStyle(actionButtonForeground(isDisabled: isSaveToPhotosDisabled))
+                            }
+
+                            Spacer()
+
+                            feedbackBadge(saveToPhotosFeedback)
                         }
                     }
                     .disabled(isSaveToPhotosDisabled)
+                    .opacity(isSaveToPhotosDisabled ? 0.45 : 1.0)
 
                     Button {
                         guard isAddToFavoriteDisabled == false else {
@@ -101,22 +112,37 @@ struct GenerateView: View {
 
                         isFavoriteSheetPresented = true
                     } label: {
-                        Label("favorites.add.button", systemImage: "text.badge.star")
-                            .foregroundStyle(isAddToFavoriteDisabled ? Color.secondary : Color.accentColor)
+                        HStack {
+                            Label("favorites.add.button", systemImage: "text.badge.star")
+                                .foregroundStyle(actionButtonForeground(isDisabled: isAddToFavoriteDisabled))
+
+                            Spacer()
+
+                            feedbackBadge(addToFavoriteFeedback)
+                        }
                     }
                     .disabled(isAddToFavoriteDisabled)
-                }
-
-                if let statusMessage = viewModel.statusMessage {
-                    Section {
-                        Text(verbatim: statusMessage)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    .opacity(isAddToFavoriteDisabled ? 0.45 : 1.0)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("tab.generate")
+            .onChange(of: viewModel.contentDraft) { _, _ in
+                resetActionFeedbackBadges()
+            }
+            .onChange(of: settingsViewModel.draftSettings) { _, _ in
+                resetActionFeedbackBadges()
+            }
+            .onChange(of: viewModel.hasGeneratedQRCode) { _, hasGeneratedQRCode in
+                if hasGeneratedQRCode == false {
+                    resetActionFeedbackBadges()
+                }
+            }
+            .onChange(of: viewModel.exportPurposeDraft) { _, _ in
+                withAnimation(.snappy) {
+                    saveToPhotosFeedback = nil
+                }
+            }
         }
         .sheet(isPresented: $isContactPickerPresented) {
             ContactPickerView(
@@ -314,7 +340,18 @@ struct GenerateView: View {
             }
         }
     }
-
+    
+    private func actionButtonForeground(isDisabled: Bool) -> Color {
+        isDisabled ? Color.secondary : Color.accentColor
+    }
+    
+    private func resetActionFeedbackBadges() {
+        withAnimation(.snappy) {
+            saveToPhotosFeedback = nil
+            addToFavoriteFeedback = nil
+        }
+    }
+    
     private func placeholderCard(_ titleKey: LocalizedStringKey, systemImage: String) -> some View {
         VStack(spacing: 10) {
             Image(systemName: systemImage)
@@ -342,10 +379,25 @@ struct GenerateView: View {
             || viewModel.canMakeFavoriteQRCode(using: settingsViewModel.draftSettings) == false
     }
 
-    private func addFavorite(named name: String) {
+    private func addFavorite(named name: String) -> Bool {
+        guard viewModel.hasGeneratedQRCode, viewModel.previewImage != nil else {
+            viewModel.statusMessage = nil
+
+            withAnimation(.snappy) {
+                addToFavoriteFeedback = .failure
+            }
+
+            return false
+        }
+
         guard settingsViewModel.hasBlockingValidation == false else {
-            viewModel.statusMessage = AppLocalization.string("settings.fixErrorsFirst")
-            return
+            viewModel.statusMessage = nil
+
+            withAnimation(.snappy) {
+                addToFavoriteFeedback = .failure
+            }
+
+            return false
         }
 
         do {
@@ -354,11 +406,33 @@ struct GenerateView: View {
                 using: settingsViewModel.draftSettings
             )
             try favoritesViewModel.addFavorite(favorite)
-            viewModel.statusMessage = AppLocalization.string("favorites.add.success")
-        } catch let error as GenerateContentError {
-            viewModel.statusMessage = error.localizedDescription
+
+            viewModel.statusMessage = nil
+
+            withAnimation(.snappy) {
+                addToFavoriteFeedback = .success
+            }
+
+            return true
         } catch {
-            viewModel.statusMessage = AppLocalization.string("favorites.add.error")
+            viewModel.statusMessage = nil
+
+            withAnimation(.snappy) {
+                addToFavoriteFeedback = .failure
+            }
+
+            return false
+        }
+    }
+    
+    private func feedbackBadge(_ feedback: ActionFeedback?) -> some View {
+        Group {
+            if let feedback {
+                Image(systemName: feedback.systemImage)
+                    .foregroundStyle(feedback.color)
+                    .font(.headline)
+                    .accessibilityHidden(true)
+            }
         }
     }
 }
@@ -368,7 +442,7 @@ private struct AddFavoriteSheet: View {
     @State private var name = ""
 
     let availableSuggestionNames: [String]
-    let onAdd: (String) -> Void
+    let onAdd: (String) -> Bool
 
     var body: some View {
         NavigationStack {
@@ -396,8 +470,9 @@ private struct AddFavoriteSheet: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("favorites.add.confirm") {
-                        onAdd(trimmedName)
-                        dismiss()
+                        if onAdd(trimmedName) {
+                            dismiss()
+                        }
                     }
                     .disabled(trimmedName.isEmpty)
                 }
@@ -412,6 +487,29 @@ private struct AddFavoriteSheet: View {
     private func suggestionButton(_ suggestionName: String) -> some View {
         Button(suggestionName) {
             name = suggestionName
+        }
+    }
+}
+
+private enum ActionFeedback: Equatable {
+    case success
+    case failure
+
+    var systemImage: String {
+        switch self {
+        case .success:
+            "checkmark.circle.fill"
+        case .failure:
+            "xmark.circle.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .success:
+            .green
+        case .failure:
+            .red
         }
     }
 }
