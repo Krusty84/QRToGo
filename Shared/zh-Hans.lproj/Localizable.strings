@@ -65,6 +65,14 @@
 "generate.locationLabel" = "位置标签";
 "generate.locationLatitude" = "纬度";
 "generate.locationLongitude" = "经度";
+"generate.locationChooseOnMap" = "在地图上选择";
+"generate.locationUseCurrent" = "使用当前位置";
+"generate.locationUseSelected" = "使用此位置";
+"generate.locationSelected" = "已选择的位置";
+"generate.locationMapSelection" = "地图选择";
+"generate.locationPermissionDenied" = "需要位置权限才能使用当前位置。";
+"generate.locationUnavailable" = "无法读取当前位置。";
+"generate.locationUnavailableTitle" = "位置不可用";
 "generate.section.content" = "内容";
 "generate.section.type" = "类型";
 "generate.smsMessage" = "短信内容";

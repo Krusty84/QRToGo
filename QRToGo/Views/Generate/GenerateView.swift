@@ -13,6 +13,8 @@ struct GenerateView: View {
     let favoritesViewModel: FavoritesViewModel
     @State private var isContactPickerPresented = false
     @State private var isFavoriteSheetPresented = false
+    @State private var isLocationMapPickerPresented = false
+    @State private var isFullScreenLocationMapPresented = false
     @State private var saveToPhotosFeedback: ActionFeedback?
     @State private var addToFavoriteFeedback: ActionFeedback?
     @FocusState private var focusedField: FocusedField?
@@ -56,10 +58,12 @@ struct GenerateView: View {
 
                 Section("generate.section.content") {
                     contentEditor
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        TextField("generate.exportPurpose", text: $viewModel.exportPurposeDraft, axis: .vertical)
-                            .lineLimit(3, reservesSpace: true)
+                    
+                    if viewModel.contentDraft.kind != .location {
+                        VStack(alignment: .leading, spacing: 8) {
+                            TextField("generate.exportPurpose", text: $viewModel.exportPurposeDraft, axis: .vertical)
+                                .lineLimit(3, reservesSpace: true)
+                        }
                     }
                 }
 
@@ -162,6 +166,22 @@ struct GenerateView: View {
                 )
             ) { name in
                 addFavorite(named: name)
+            }
+        }
+        .sheet(isPresented: $isLocationMapPickerPresented) {
+            LocationMapPickerView(
+                initialSelection: viewModel.selectedLocation
+            ) { selection in
+                viewModel.setSelectedLocation(selection)
+                isLocationMapPickerPresented = false
+            }
+        }
+        .fullScreenCover(isPresented: $isFullScreenLocationMapPresented) {
+            LocationMapPickerView(
+                initialSelection: viewModel.selectedLocation
+            ) { selection in
+                viewModel.setSelectedLocation(selection)
+                isFullScreenLocationMapPresented = false
             }
         }
     }
@@ -305,13 +325,26 @@ struct GenerateView: View {
 
     private var locationEditor: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextField("generate.locationLatitude", text: $viewModel.contentDraft.locationLatitude)
-                .keyboardType(.decimalPad)
-                .focused($focusedField, equals: .locationLatitude)
+            HStack(spacing: 12) {
+                TextField("generate.locationLatitude", text: $viewModel.contentDraft.locationLatitude)
+                    .keyboardType(.numbersAndPunctuation)
+                    .focused($focusedField, equals: .locationLatitude)
 
-            TextField("generate.locationLongitude", text: $viewModel.contentDraft.locationLongitude)
-                .keyboardType(.decimalPad)
-                .focused($focusedField, equals: .locationLongitude)
+                TextField("generate.locationLongitude", text: $viewModel.contentDraft.locationLongitude)
+                    .keyboardType(.numbersAndPunctuation)
+                    .focused($focusedField, equals: .locationLongitude)
+            }
+
+            LocationInlineMapView(
+                selection: viewModel.selectedLocation,
+                currentLabel: viewModel.contentDraft.locationLabel,
+                onSelect: { selection in
+                    viewModel.setSelectedLocation(selection)
+                },
+                onOpenFullScreen: {
+                    isFullScreenLocationMapPresented = true
+                }
+            )
 
             TextField("generate.locationLabel", text: $viewModel.contentDraft.locationLabel)
                 .focused($focusedField, equals: .locationLabel)

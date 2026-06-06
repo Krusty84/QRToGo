@@ -144,3 +144,9 @@ enum GenerateContentError: LocalizedError {
         }
     }
 }
+
+struct GenerateLocationSelection: Equatable {
+    let latitude: Double
+    let longitude: Double
+    var label: String = ""
+}

@@ -28,6 +28,22 @@ final class GenerateViewModel {
             && previewErrorMessage == nil
             && isGeneratingPreview == false
     }
+    var selectedLocation: GenerateLocationSelection? {
+        guard
+            let latitude = parsedCoordinate(from: contentDraft.locationLatitude),
+            let longitude = parsedCoordinate(from: contentDraft.locationLongitude),
+            (-90...90).contains(latitude),
+            (-180...180).contains(longitude)
+        else {
+            return nil
+        }
+
+        return GenerateLocationSelection(
+            latitude: latitude,
+            longitude: longitude,
+            label: contentDraft.locationLabel
+        )
+    }
     
     private var previewTask: Task<Void, Never>?
 
@@ -43,12 +59,26 @@ final class GenerateViewModel {
 
     func setContentKind(_ kind: GenerateContentKind) {
         contentDraft.kind = kind
+
+        if kind == .location {
+            exportPurposeDraft = ""
+        }
     }
 
     func setWiFiSecurity(_ security: GenerateWiFiSecurity) {
         contentDraft.wifiSecurity = security
         if security == .none {
             contentDraft.wifiPassword = ""
+        }
+    }
+    
+    func setSelectedLocation(_ selection: GenerateLocationSelection) {
+        contentDraft.locationLatitude = formattedCoordinate(selection.latitude)
+        contentDraft.locationLongitude = formattedCoordinate(selection.longitude)
+
+        let trimmedLabel = selection.label.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedLabel.isEmpty == false {
+            contentDraft.locationLabel = trimmedLabel
         }
     }
 

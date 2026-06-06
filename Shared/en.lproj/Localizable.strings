@@ -65,6 +65,14 @@
 "generate.locationLabel" = "Location label";
 "generate.locationLatitude" = "Latitude";
 "generate.locationLongitude" = "Longitude";
+"generate.locationChooseOnMap" = "Choose on Map";
+"generate.locationUseCurrent" = "Use Current Location";
+"generate.locationUseSelected" = "Use This Location";
+"generate.locationSelected" = "Selected location";
+"generate.locationMapSelection" = "Map selection";
+"generate.locationPermissionDenied" = "Location permission is required to use your current position.";
+"generate.locationUnavailable" = "Unable to read the current location.";
+"generate.locationUnavailableTitle" = "Location unavailable";
 "generate.section.content" = "Content";
 "generate.section.type" = "Type";
 "generate.smsMessage" = "SMS message";
