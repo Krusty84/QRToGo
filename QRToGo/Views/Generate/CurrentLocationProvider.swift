@@ -28,22 +28,21 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
     }
 
     func requestCurrentLocation() {
-        guard CLLocationManager.locationServicesEnabled() else {
-            errorMessage = AppLocalization.string("generate.locationServicesDisabled")
-            return
-        }
-
         errorMessage = nil
         authorizationStatus = manager.authorizationStatus
 
-        switch manager.authorizationStatus {
+        #if DEBUG
+        print("Location authorization status:", authorizationStatus.rawValue)
+        #endif
+
+        switch authorizationStatus {
         case .notDetermined:
             pendingLocationRequest = true
             manager.requestWhenInUseAuthorization()
 
         case .authorizedWhenInUse, .authorizedAlways:
             pendingLocationRequest = false
-            manager.requestLocation()
+            requestLocationAfterServicesCheck()
 
         case .denied, .restricted:
             pendingLocationRequest = false
@@ -59,6 +58,10 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         DispatchQueue.main.async {
             self.authorizationStatus = manager.authorizationStatus
 
+            #if DEBUG
+            print("Location authorization changed:", manager.authorizationStatus.rawValue)
+            #endif
+
             guard self.pendingLocationRequest else {
                 return
             }
@@ -66,14 +69,37 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
             switch manager.authorizationStatus {
             case .authorizedWhenInUse, .authorizedAlways:
                 self.pendingLocationRequest = false
-                manager.requestLocation()
+                self.requestLocationAfterServicesCheck()
 
             case .denied, .restricted:
                 self.pendingLocationRequest = false
                 self.errorMessage = AppLocalization.string("generate.locationPermissionDenied")
 
-            default:
+            case .notDetermined:
                 break
+
+            @unknown default:
+                self.pendingLocationRequest = false
+                self.errorMessage = AppLocalization.string("generate.locationUnavailable")
+            }
+        }
+    }
+
+    private func requestLocationAfterServicesCheck() {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let servicesEnabled = CLLocationManager.locationServicesEnabled()
+
+            DispatchQueue.main.async {
+                guard let self else {
+                    return
+                }
+
+                guard servicesEnabled else {
+                    self.errorMessage = AppLocalization.string("generate.locationServicesDisabled")
+                    return
+                }
+
+                self.manager.requestLocation()
             }
         }
     }
@@ -97,6 +123,10 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude
             )
+
+            #if DEBUG
+            print("Current location:", coordinate.latitude, coordinate.longitude)
+            #endif
         }
     }
 
@@ -105,6 +135,10 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         didFailWithError error: Error
     ) {
         DispatchQueue.main.async {
+            #if DEBUG
+            print("Location error:", error.localizedDescription)
+            #endif
+
             self.errorMessage = AppLocalization.string("generate.locationUnavailable")
         }
     }
