@@ -116,11 +116,6 @@ struct GenerateView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .simultaneousGesture(
-                TapGesture().onEnded {
-                    focusedField = nil
-                }
-            )
             .navigationTitle("tab.generate")
         }
         .sheet(isPresented: $isContactPickerPresented) {

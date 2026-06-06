@@ -90,6 +90,8 @@
 "favorites.add.title" = "添加到收藏";
 "favorites.delete" = "删除";
 "favorites.delete.confirm" = "删除收藏";
+"favorites.delete.inlineTitle" = "删除 %@？";
+"favorites.delete.inlineMessage" = "此收藏将从已保存的二维码中移除。";
 "favorites.empty.description" = "请从“生成”标签页添加生成的二维码。";
 "favorites.empty.title" = "暂无收藏";
 "favorites.name" = "名称";

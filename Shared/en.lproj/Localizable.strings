@@ -112,6 +112,8 @@
 "favorites.title" = "Favorites";
 "favorites.updated" = "Updated";
 "favorites.delete.message" = "Are you sure you want to remove this item?";
+"favorites.delete.inlineTitle" = "Delete %@?";
+"favorites.delete.inlineMessage" = "This favorite will be removed from your saved QR codes.";
 "settings.albumName" = "Album name";
 "settings.appLanguage" = "App language";
 "settings.backgroundColor" = "Background color";
