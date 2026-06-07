@@ -63,28 +63,7 @@ struct LocationMapPickerView: View {
                     }
                 }
 
-                Form {
-                    Section("generate.locationMapSelection") {
-                        Button("generate.locationGetCurrent", systemImage: "location.fill") {
-                            locationProvider.requestCurrentLocation()
-                        }
-
-                        if let selectedCoordinate {
-                            LabeledContent(
-                                "generate.locationLatitude",
-                                value: formattedCoordinate(selectedCoordinate.latitude)
-                            )
-
-                            LabeledContent(
-                                "generate.locationLongitude",
-                                value: formattedCoordinate(selectedCoordinate.longitude)
-                            )
-                        }
-
-                        TextField("generate.locationLabel", text: $label)
-                    }
-                }
-                .frame(maxHeight: 220)
+                locationControlPanel
             }
             .navigationTitle("generate.locationChooseOnMap")
             .navigationBarTitleDisplayMode(.inline)
@@ -98,25 +77,6 @@ struct LocationMapPickerView: View {
                             systemImage: "arrow.down.right.and.arrow.up.left"
                         )
                     }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        guard let selectedCoordinate else {
-                            return
-                        }
-
-                        onSelect(
-                            GenerateLocationSelection(
-                                latitude: selectedCoordinate.latitude,
-                                longitude: selectedCoordinate.longitude,
-                                label: label
-                            )
-                        )
-                    } label: {
-                        Label("generate.locationUseSelected", systemImage: "checkmark")
-                    }
-                    .disabled(selectedCoordinate == nil)
                 }
             }
             .onReceive(locationProvider.$currentSelection.compactMap { $0 }) { selection in
@@ -151,8 +111,22 @@ struct LocationMapPickerView: View {
         }
     }
 
+    private func useSelectedLocation() {
+        guard let selectedCoordinate else {
+            return
+        }
+
+        onSelect(
+            GenerateLocationSelection(
+                latitude: selectedCoordinate.latitude,
+                longitude: selectedCoordinate.longitude,
+                label: label
+            )
+        )
+    }
+    
     private func formattedCoordinate(_ value: Double) -> String {
-        String(format: "%.6f", value)
+        String(format: "%.2f", value)
     }
     
     private var centerPin: some View {
@@ -166,5 +140,61 @@ struct LocationMapPickerView: View {
         .offset(y: -18)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+    
+    private var locationControlPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Button {
+                    locationProvider.requestCurrentLocation()
+                } label: {
+                    Label("generate.locationGetCurrent", systemImage: "location.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    useSelectedLocation()
+                } label: {
+                    Label("generate.locationUseCurrent", systemImage: "checkmark")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(selectedCoordinate == nil)
+            }
+
+            if let selectedCoordinate {
+                HStack(spacing: 12) {
+                    coordinateValueView(
+                        titleKey: "generate.locationLatitude",
+                        value: formattedCoordinate(selectedCoordinate.latitude)
+                    )
+
+                    coordinateValueView(
+                        titleKey: "generate.locationLongitude",
+                        value: formattedCoordinate(selectedCoordinate.longitude)
+                    )
+                }
+            }
+
+            TextField("generate.locationLabel", text: $label)
+                .textFieldStyle(.roundedBorder)
+        }
+        .padding()
+        .background(Color(uiColor: .systemBackground))
+    }
+    
+    private func coordinateValueView(titleKey: LocalizedStringKey, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(titleKey)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text(value)
+                .font(.body.monospacedDigit())
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

@@ -16,7 +16,7 @@ struct LocationInlineMapView: View {
 
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 52.3676, longitude: 4.9041),
+            center: CLLocationCoordinate2D(latitude: 65.70, longitude: -168.95),
             span: MKCoordinateSpan(latitudeDelta: 0.04, longitudeDelta: 0.04)
         )
     )

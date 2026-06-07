@@ -67,7 +67,7 @@
 "generate.locationLongitude" = "Longitude";
 "generate.locationChooseOnMap" = "Choose on Map";
 "generate.locationGetCurrent" = "Get Current Location";
-"generate.locationUseSelected" = "Use This Location";
+"generate.locationUseCurrent" = "Use Current Location";
 "generate.locationSelected" = "Selected location";
 "generate.locationMapSelection" = "Map selection";
 "generate.locationPermissionDenied" = "Location permission is required to use your current position.";
