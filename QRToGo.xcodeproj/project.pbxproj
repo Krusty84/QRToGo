@@ -56,6 +56,12 @@
 			);
 			target = 3D4D337E2FC630B000A8B73A /* QRCodeGenerator */;
 		};
+		3D7054B62FD60EF200918192 /* Exceptions for "Shared" folder in "QRCodeGenerator" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+			);
+			target = 3D4D337E2FC630B000A8B73A /* QRCodeGenerator */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -77,6 +83,9 @@
 		};
 		3D4D33972FC6500000A8B73A /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3D7054B62FD60EF200918192 /* Exceptions for "Shared" folder in "QRCodeGenerator" target */,
+			);
 			path = Shared;
 			sourceTree = "<group>";
 		};

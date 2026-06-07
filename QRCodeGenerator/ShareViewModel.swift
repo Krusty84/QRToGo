@@ -24,7 +24,7 @@ final class ShareViewModel {
     var previewErrorMessage: String?
     var statusMessage: String?
     var validationResults: [QRValidationResult] = []
-    var isLoading = false
+    var isLoading = true
     var isGeneratingPreview = false
     var isSaving = false
 
