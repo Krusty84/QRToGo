@@ -151,7 +151,7 @@
 "settings.scannability.safe" = "Current settings look scan-safe.";
 "settings.section.language" = "Language";
 "settings.section.colors" = "Colors";
-"settings.section.export" = "Export";
+"settings.section.other" = "Other";
 "settings.section.about" = "About";
 "settings.section.preview" = "QR Preview";
 "settings.section.readability" = "Readability";

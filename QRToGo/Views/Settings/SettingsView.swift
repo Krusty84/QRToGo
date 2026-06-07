@@ -71,7 +71,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("settings.section.export") {
+                Section("settings.section.other") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("settings.albumName")
 

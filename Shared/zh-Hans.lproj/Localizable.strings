@@ -151,7 +151,7 @@
 "settings.scannability.safe" = "当前设置看起来适合扫描。";
 "settings.section.language" = "语言";
 "settings.section.colors" = "颜色";
-"settings.section.export" = "导出";
+"settings.section.other" = "其它";
 "settings.section.about" = "关于";
 "settings.section.preview" = "二维码预览";
 "settings.section.readability" = "可读性";

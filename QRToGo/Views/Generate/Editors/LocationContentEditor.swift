@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct LocationContentEditor: View {
-    @Binding var latitude: String
-    @Binding var longitude: String
     @Binding var label: String
     let selectedLocation: GenerateLocationSelection?
     let isResolvingCurrentLocation: Bool
@@ -19,14 +17,18 @@ struct LocationContentEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                TextField("generate.locationLatitude", text: $latitude)
-                    .keyboardType(.numbersAndPunctuation)
-                    .focused($focusedField, equals: .locationLatitude)
+            if let selectedLocation {
+                HStack(spacing: 12) {
+                    LocationCoordinateValueView(
+                        titleKey: "generate.locationLatitude",
+                        value: LocationCoordinateFormatter.display(selectedLocation.latitude)
+                    )
 
-                TextField("generate.locationLongitude", text: $longitude)
-                    .keyboardType(.numbersAndPunctuation)
-                    .focused($focusedField, equals: .locationLongitude)
+                    LocationCoordinateValueView(
+                        titleKey: "generate.locationLongitude",
+                        value: LocationCoordinateFormatter.display(selectedLocation.longitude)
+                    )
+                }
             }
 
             LocationInlineMapView(

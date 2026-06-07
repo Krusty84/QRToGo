@@ -16,7 +16,6 @@ struct LocationMapPickerView: View {
 
     @State private var cameraPosition: MapCameraPosition
     @State private var selectedCoordinate: CLLocationCoordinate2D?
-    @State private var label: String
 
     let onSelect: (GenerateLocationSelection) -> Void
 
@@ -31,8 +30,6 @@ struct LocationMapPickerView: View {
         } ?? CLLocationCoordinate2D(latitude: 52.3676, longitude: 4.9041)
 
         _selectedCoordinate = State(initialValue: initialCoordinate)
-
-        _label = State(initialValue: initialSelection?.label ?? "")
 
         _cameraPosition = State(
             initialValue: .region(
@@ -120,7 +117,7 @@ struct LocationMapPickerView: View {
             GenerateLocationSelection(
                 latitude: selectedCoordinate.latitude,
                 longitude: selectedCoordinate.longitude,
-                label: label
+                //label: label
             )
         )
     }
@@ -171,37 +168,21 @@ struct LocationMapPickerView: View {
 
             if let selectedCoordinate {
                 HStack(spacing: 12) {
-                    coordinateValueView(
+                    LocationCoordinateValueView(
                         titleKey: "generate.locationLatitude",
                         value: LocationCoordinateFormatter.display(selectedCoordinate.latitude)
                     )
 
-                    coordinateValueView(
+                    LocationCoordinateValueView(
                         titleKey: "generate.locationLongitude",
                         value: LocationCoordinateFormatter.display(selectedCoordinate.longitude)
                     )
                 }
             }
 
-            TextField("generate.locationLabel", text: $label)
-                .textFieldStyle(.roundedBorder)
         }
         .padding()
         .background(Color(uiColor: .systemBackground))
         .animation(.snappy, value: locationProvider.isRequestingLocation)
-    }
-    
-    private func coordinateValueView(titleKey: LocalizedStringKey, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(titleKey)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text(value)
-                .font(.body.monospacedDigit())
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

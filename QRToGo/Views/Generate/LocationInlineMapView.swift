@@ -57,8 +57,8 @@ struct LocationInlineMapView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(.regularMaterial, in: Capsule())
-                    .padding(.bottom, 12)
                     .transition(.opacity)
+                    .padding(.bottom, 12)
                 }
             }
             .onMapCameraChange(frequency: .onEnd) { context in

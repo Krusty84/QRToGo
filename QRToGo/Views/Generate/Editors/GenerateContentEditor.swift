@@ -68,8 +68,6 @@ struct GenerateContentEditor: View {
             )
         case .location:
             LocationContentEditor(
-                latitude: $draft.locationLatitude,
-                longitude: $draft.locationLongitude,
                 label: $draft.locationLabel,
                 selectedLocation: selectedLocation,
                 isResolvingCurrentLocation: isResolvingCurrentLocation,

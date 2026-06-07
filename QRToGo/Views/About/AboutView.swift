@@ -2,7 +2,7 @@
 //  AboutView.swift
 //  QRToGo
 //
-//  Created by Codex on 07/06/2026.
+//  Created by Sedoykin Alexey on 07/06/2026.
 //
 
 import SwiftUI
