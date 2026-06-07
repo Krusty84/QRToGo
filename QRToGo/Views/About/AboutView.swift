@@ -68,7 +68,7 @@ struct AboutView: View {
             
             linkRow(title: "about.link.privacy",
                     icon: "hand.raised",
-                    url: "https://github.com/Krusty84/QRToGo")
+                    url: "https://www.sedoykin.com/published_app/QR2Go/legal/Privacy_Policy.html")
         }
         .frame(maxWidth: 360, alignment: .leading)
     }
