@@ -71,6 +71,8 @@
 "generate.locationSelected" = "Selected location";
 "generate.locationMapSelection" = "Map selection";
 "generate.locationPermissionDenied" = "Location permission is required to use your current position.";
+"generate.locationLoading" = "Getting current location...";
+"generate.locationLoadingShort" = "Locating...";
 "generate.locationUnavailable" = "Unable to read the current location.";
 "generate.locationUnavailableTitle" = "Location unavailable";
 "generate.section.content" = "Content";
@@ -173,6 +175,7 @@
 "share.save" = "Save to Photos";
 "share.saveSuccess" = "Saved to %@.";
 "share.title" = "Generated QR";
+"app.loading" = "Loading...";
 "tab.about" = "About";
 "tab.favorites" = "Favorites";
 "tab.generate" = "Generate";

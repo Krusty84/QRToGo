@@ -131,10 +131,21 @@ struct LocationMapPickerView: View {
                 Button {
                     locationProvider.requestCurrentLocation()
                 } label: {
-                    Label("generate.locationGetCurrent", systemImage: "location.fill")
+                    if locationProvider.isRequestingLocation {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+
+                            Text("generate.locationLoadingShort")
+                        }
                         .frame(maxWidth: .infinity)
+                    } else {
+                        Label("generate.locationGetCurrent", systemImage: "location.fill")
+                            .frame(maxWidth: .infinity)
+                    }
                 }
                 .buttonStyle(.bordered)
+                .disabled(locationProvider.isRequestingLocation)
 
                 Button {
                     useSelectedLocation()
@@ -144,6 +155,18 @@ struct LocationMapPickerView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(selectedCoordinate == nil)
+            }
+
+            if locationProvider.isRequestingLocation {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+
+                    Text("generate.locationLoading")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+                .transition(.opacity)
             }
 
             if let selectedCoordinate {
@@ -165,6 +188,7 @@ struct LocationMapPickerView: View {
         }
         .padding()
         .background(Color(uiColor: .systemBackground))
+        .animation(.snappy, value: locationProvider.isRequestingLocation)
     }
     
     private func coordinateValueView(titleKey: LocalizedStringKey, value: String) -> some View {

@@ -13,6 +13,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
     @Published var currentSelection: GenerateLocationSelection?
     @Published var errorMessage: String?
     @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    @Published var isRequestingLocation = false
 
     private let manager = CLLocationManager()
     private var pendingLocationRequest = false
@@ -57,18 +58,22 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         switch authorizationStatus {
         case .notDetermined:
             pendingLocationRequest = true
+            isRequestingLocation = true
             manager.requestWhenInUseAuthorization()
 
         case .authorizedWhenInUse, .authorizedAlways:
             pendingLocationRequest = false
+            isRequestingLocation = true
             requestLocationAfterServicesCheck()
 
         case .denied, .restricted:
             pendingLocationRequest = false
+            isRequestingLocation = false
             errorMessage = AppLocalization.string("generate.locationPermissionDenied")
 
         @unknown default:
             pendingLocationRequest = false
+            isRequestingLocation = false
             errorMessage = AppLocalization.string("generate.locationUnavailable")
         }
     }
@@ -80,18 +85,22 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         switch authorizationStatus {
         case .notDetermined:
             pendingLocationRequest = true
+            isRequestingLocation = true
             manager.requestWhenInUseAuthorization()
 
         case .authorizedWhenInUse, .authorizedAlways:
             pendingLocationRequest = false
+            isRequestingLocation = true
             requestLocationAfterServicesCheck()
 
         case .denied, .restricted:
             pendingLocationRequest = false
+            isRequestingLocation = false
             errorMessage = AppLocalization.string("generate.locationPermissionDenied")
 
         @unknown default:
             pendingLocationRequest = false
+            isRequestingLocation = false
             errorMessage = AppLocalization.string("generate.locationUnavailable")
         }
     }
@@ -105,6 +114,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
             #endif
 
             guard self.pendingLocationRequest else {
+                self.isRequestingLocation = false
                 return
             }
 
@@ -115,6 +125,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
 
             case .denied, .restricted:
                 self.pendingLocationRequest = false
+                self.isRequestingLocation = false
                 self.errorMessage = AppLocalization.string("generate.locationPermissionDenied")
 
             case .notDetermined:
@@ -122,6 +133,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
 
             @unknown default:
                 self.pendingLocationRequest = false
+                self.isRequestingLocation = false
                 self.errorMessage = AppLocalization.string("generate.locationUnavailable")
             }
         }
@@ -137,6 +149,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
                 }
 
                 guard servicesEnabled else {
+                    self.isRequestingLocation = false
                     self.errorMessage = AppLocalization.string("generate.locationServicesDisabled")
                     return
                 }
@@ -152,6 +165,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
     ) {
         guard let location = locations.last else {
             DispatchQueue.main.async {
+                self.isRequestingLocation = false
                 self.errorMessage = AppLocalization.string("generate.locationUnavailable")
             }
             return
@@ -160,6 +174,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         let coordinate = location.coordinate
 
         DispatchQueue.main.async {
+            self.isRequestingLocation = false
             self.errorMessage = nil
             self.currentSelection = GenerateLocationSelection(
                 latitude: coordinate.latitude,
@@ -181,6 +196,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
             print("Location error:", error.localizedDescription)
             #endif
 
+            self.isRequestingLocation = false
             self.errorMessage = AppLocalization.string("generate.locationUnavailable")
         }
     }

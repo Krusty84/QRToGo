@@ -12,6 +12,7 @@ struct LocationContentEditor: View {
     @Binding var longitude: String
     @Binding var label: String
     let selectedLocation: GenerateLocationSelection?
+    let isResolvingCurrentLocation: Bool
     let onSelectLocation: (GenerateLocationSelection) -> Void
     let onOpenFullScreenMap: () -> Void
     @FocusState.Binding var focusedField: GenerateFocusedField?
@@ -30,6 +31,7 @@ struct LocationContentEditor: View {
 
             LocationInlineMapView(
                 selection: selectedLocation,
+                isResolvingCurrentLocation: isResolvingCurrentLocation,
                 currentLabel: label,
                 onSelect: onSelectLocation,
                 onOpenFullScreen: onOpenFullScreenMap

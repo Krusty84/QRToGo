@@ -71,6 +71,8 @@
 "generate.locationSelected" = "已选择的位置";
 "generate.locationMapSelection" = "地图选择";
 "generate.locationPermissionDenied" = "需要位置权限才能使用当前位置。";
+"generate.locationLoading" = "正在获取当前位置...";
+"generate.locationLoadingShort" = "定位中...";
 "generate.locationUnavailable" = "无法读取当前位置。";
 "generate.locationUnavailableTitle" = "位置不可用";
 "generate.section.content" = "内容";
@@ -173,6 +175,7 @@
 "share.save" = "保存到“照片”";
 "share.saveSuccess" = "已保存到 %@。";
 "share.title" = "生成二维码";
+"app.loading" = "正在加载...";
 "tab.about" = "关于";
 "tab.favorites" = "收藏";
 "tab.generate" = "生成";

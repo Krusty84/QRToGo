@@ -10,6 +10,7 @@ import SwiftUI
 struct GenerateContentEditor: View {
     @Binding var draft: GenerateContentDraft
     let selectedLocation: GenerateLocationSelection?
+    let isResolvingCurrentLocation: Bool
     let wifiSecurity: Binding<GenerateWiFiSecurity>
     let onPickContact: () -> Void
     let onRemoveContact: () -> Void
@@ -71,6 +72,7 @@ struct GenerateContentEditor: View {
                 longitude: $draft.locationLongitude,
                 label: $draft.locationLabel,
                 selectedLocation: selectedLocation,
+                isResolvingCurrentLocation: isResolvingCurrentLocation,
                 onSelectLocation: onSelectLocation,
                 onOpenFullScreenMap: onOpenFullScreenMap,
                 focusedField: $focusedField

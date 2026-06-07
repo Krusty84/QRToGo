@@ -34,6 +34,7 @@ struct GenerateView: View {
                     GenerateContentEditor(
                         draft: $viewModel.contentDraft,
                         selectedLocation: viewModel.selectedLocation,
+                        isResolvingCurrentLocation: locationProvider.isRequestingLocation,
                         wifiSecurity: wifiSecurityBinding,
                         onPickContact: presentContactPicker,
                         onRemoveContact: viewModel.removeSelectedContact,

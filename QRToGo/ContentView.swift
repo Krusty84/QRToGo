@@ -12,6 +12,8 @@ struct ContentView: View {
     @State private var settingsViewModel = SettingsViewModel()
     @State private var generateViewModel = GenerateViewModel()
     @State private var favoritesViewModel = FavoritesViewModel()
+    @State private var isInitialLoading = true
+    @State private var didPerformInitialLoad = false
 
     init() {
         let launchMode = FavoriteShortcutRouter.shared.initialLaunchMode()
@@ -19,21 +21,33 @@ struct ContentView: View {
     }
 
     var body: some View {
-        rootContent
+        Group {
+            if isInitialLoading {
+                AppLoadingView()
+            } else {
+                rootContent
+            }
+        }
             .task {
-                settingsViewModel.loadIfNeeded()
-                favoritesViewModel.loadIfNeeded()
-                FavoriteShortcutRouter.shared.connect(navigationState)
-                generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
+                await performInitialLoadIfNeeded()
             }
             .environment(\.locale, settingsViewModel.appLanguage.locale)
             .onChange(of: generateViewModel.contentDraft) { _, _ in
+                guard isInitialLoading == false else {
+                    return
+                }
                 generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
             }
             .onChange(of: settingsViewModel.draftSettings) { _, _ in
+                guard isInitialLoading == false else {
+                    return
+                }
                 generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
             }
             .onChange(of: settingsViewModel.appLanguage) { _, _ in
+                guard isInitialLoading == false else {
+                    return
+                }
                 generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
                 FavoriteQuickActionService().updateShortcuts(from: favoritesViewModel.favorites)
             }
@@ -59,6 +73,25 @@ struct ContentView: View {
 
     private func closeQuickActionPresentation() {
         navigationState.launchMode = .normal
+    }
+
+    @MainActor
+    private func performInitialLoadIfNeeded() async {
+        guard didPerformInitialLoad == false else {
+            return
+        }
+        didPerformInitialLoad = true
+
+        await Task.yield()
+
+        settingsViewModel.loadIfNeeded()
+        favoritesViewModel.loadIfNeeded()
+        FavoriteShortcutRouter.shared.connect(navigationState)
+        generateViewModel.refreshPreview(using: settingsViewModel.draftSettings)
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            isInitialLoading = false
+        }
     }
 }
 

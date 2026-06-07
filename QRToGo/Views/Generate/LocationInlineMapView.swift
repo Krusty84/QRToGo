@@ -10,6 +10,7 @@ import SwiftUI
 
 struct LocationInlineMapView: View {
     let selection: GenerateLocationSelection?
+    let isResolvingCurrentLocation: Bool
     let currentLabel: String
     let onSelect: (GenerateLocationSelection) -> Void
     let onOpenFullScreen: () -> Void
@@ -44,6 +45,22 @@ struct LocationInlineMapView: View {
                 .padding(10)
                 .accessibilityLabel(Text("generate.locationOpenFullScreen"))
             }
+            .overlay(alignment: .bottom) {
+                if isResolvingCurrentLocation {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+
+                        Text("generate.locationLoading")
+                            .font(.footnote.weight(.medium))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(.bottom, 12)
+                    .transition(.opacity)
+                }
+            }
             .onMapCameraChange(frequency: .onEnd) { context in
                 let coordinate = context.region.center
 
@@ -61,6 +78,7 @@ struct LocationInlineMapView: View {
             .onChange(of: selection) { _, _ in
                 centerMapOnSelection()
             }
+            .animation(.snappy, value: isResolvingCurrentLocation)
         }
     }
 
