@@ -181,6 +181,7 @@
 "app.loading" = "Loading...";
 "tab.about" = "About";
 "about.title" = "About";
+"about.version" = "Version";
 "about.subtitle" = "QR codes for everyday use";
 "about.description" = "QR2Go helps you create, save, and reuse QR codes for websites, contacts, Wi-Fi, messages, locations, and more.";
 "about.link.github" = "Source Code";

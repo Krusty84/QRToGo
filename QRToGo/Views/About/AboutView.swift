@@ -39,6 +39,11 @@ struct AboutView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+            
+            Text(version)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
     }
@@ -83,6 +88,12 @@ struct AboutView: View {
             .contentShape(Rectangle())
         }
         .font(.body)
+    }
+    
+    private var version: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        
+        return "\(AppLocalization.string("about.version")) \(version)"
     }
 }
 

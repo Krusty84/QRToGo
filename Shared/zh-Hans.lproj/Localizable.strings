@@ -181,6 +181,7 @@
 "app.loading" = "正在加载...";
 "tab.about" = "关于";
 "about.title" = "关于";
+"about.version" = "版本";
 "about.subtitle" = "适用于日常使用的二维码";
 "about.description" = "QR2Go 可帮助你为网站、联系人、Wi-Fi、消息、位置等内容创建、保存和重复使用二维码。";
 "about.link.github" = "源代码";
