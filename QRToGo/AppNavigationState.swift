@@ -12,7 +12,6 @@ enum MainTab: Hashable {
     case generate
     case favorites
     case settings
-    case about
 }
 
 enum AppLaunchMode: Equatable {

@@ -152,6 +152,7 @@
 "settings.section.language" = "Language";
 "settings.section.colors" = "Colors";
 "settings.section.export" = "Export";
+"settings.section.about" = "About";
 "settings.section.preview" = "QR Preview";
 "settings.section.readability" = "Readability";
 "settings.section.style" = "Style";
@@ -162,6 +163,7 @@
 "settings.crop.title" = "Crop image";
 "settings.crop.useImage" = "Use Image";
 "settings.title" = "QR Generator";
+"settings.about" = "About QR2Go";
 "settings.visualEffect" = "Visual effect";
 "settings.language.system" = "System";
 "settings.language.english" = "English";
@@ -177,6 +179,12 @@
 "share.title" = "Generated QR";
 "app.loading" = "Loading...";
 "tab.about" = "About";
+"about.title" = "About";
+"about.subtitle" = "QR codes for everyday use";
+"about.description" = "QR2Go helps you create, save, and reuse QR codes for websites, contacts, Wi-Fi, messages, locations, and more.";
+"about.link.github" = "Source Code";
+"about.link.home" = "Author Website";
+"about.link.privacy" = "Privacy Policy";
 "tab.favorites" = "Favorites";
 "tab.generate" = "Generate";
 "tab.settings" = "Settings";

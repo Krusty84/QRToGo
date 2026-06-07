@@ -152,6 +152,7 @@
 "settings.section.language" = "语言";
 "settings.section.colors" = "颜色";
 "settings.section.export" = "导出";
+"settings.section.about" = "关于";
 "settings.section.preview" = "二维码预览";
 "settings.section.readability" = "可读性";
 "settings.section.style" = "样式";
@@ -162,6 +163,7 @@
 "settings.crop.title" = "裁剪图像";
 "settings.crop.useImage" = "使用图像";
 "settings.title" = "二维码生成器";
+"settings.about" = "关于 QR2Go";
 "settings.visualEffect" = "视觉效果";
 "settings.language.system" = "跟随系统";
 "settings.language.english" = "English";
@@ -177,6 +179,12 @@
 "share.title" = "生成二维码";
 "app.loading" = "正在加载...";
 "tab.about" = "关于";
+"about.title" = "关于";
+"about.subtitle" = "适用于日常使用的二维码";
+"about.description" = "QR2Go 可帮助你为网站、联系人、Wi-Fi、消息、位置等内容创建、保存和重复使用二维码。";
+"about.link.github" = "源代码";
+"about.link.home" = "作者网站";
+"about.link.privacy" = "隐私政策";
 "tab.favorites" = "收藏";
 "tab.generate" = "生成";
 "tab.settings" = "设置";

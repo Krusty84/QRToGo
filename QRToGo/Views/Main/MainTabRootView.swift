@@ -39,21 +39,6 @@ struct MainTabRootView: View {
                     Label("tab.settings", systemImage: "gearshape")
                 }
                 .tag(MainTab.settings)
-
-            AboutView()
-                .tabItem {
-                    Label("tab.about", systemImage: "info.circle")
-                }
-                .tag(MainTab.about)
-        }
-    }
-}
-
-private struct AboutView: View {
-    var body: some View {
-        NavigationStack {
-            Color.clear
-                .navigationTitle("tab.about")
         }
     }
 }

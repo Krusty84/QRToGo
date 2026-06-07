@@ -92,6 +92,14 @@ struct SettingsView: View {
                     .disabled(viewModel.hasBlockingValidation || viewModel.hasUnsavedChanges == false)
                 }
 
+                Section("settings.section.about") {
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Label("settings.about", systemImage: "info.circle")
+                    }
+                }
+
                 if let statusMessage = viewModel.statusMessage {
                     Section {
                         Text(verbatim: statusMessage)

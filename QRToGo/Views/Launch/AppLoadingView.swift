@@ -14,11 +14,7 @@ struct AppLoadingView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 18) {
-                Image("AppLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 96, height: 96)
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                AppLogoView(size: 96)
 
                 Text("QR2Go")
                     .font(.title2.weight(.semibold))
