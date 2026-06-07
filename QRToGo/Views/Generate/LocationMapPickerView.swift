@@ -65,7 +65,7 @@ struct LocationMapPickerView: View {
 
                 Form {
                     Section("generate.locationMapSelection") {
-                        Button("generate.locationUseCurrent", systemImage: "location.fill") {
+                        Button("generate.locationGetCurrent", systemImage: "location.fill") {
                             locationProvider.requestCurrentLocation()
                         }
 

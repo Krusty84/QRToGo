@@ -66,7 +66,7 @@
 "generate.locationLatitude" = "纬度";
 "generate.locationLongitude" = "经度";
 "generate.locationChooseOnMap" = "在地图上选择";
-"generate.locationUseCurrent" = "使用当前位置";
+"generate.locationGetCurrent" = "使用当前位置";
 "generate.locationUseSelected" = "使用此位置";
 "generate.locationSelected" = "已选择的位置";
 "generate.locationMapSelection" = "地图选择";

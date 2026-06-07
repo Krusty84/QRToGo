@@ -27,6 +27,25 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         authorizationStatus = manager.authorizationStatus
     }
 
+    func requestAuthorizationIfNeeded() {
+        errorMessage = nil
+        authorizationStatus = manager.authorizationStatus
+
+        switch authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+
+        case .authorizedWhenInUse, .authorizedAlways:
+            break
+
+        case .denied, .restricted:
+            errorMessage = AppLocalization.string("generate.locationPermissionDenied")
+
+        @unknown default:
+            errorMessage = AppLocalization.string("generate.locationUnavailable")
+        }
+    }
+    
     func requestCurrentLocation() {
         errorMessage = nil
         authorizationStatus = manager.authorizationStatus

@@ -13,6 +13,7 @@ struct GenerateView: View {
     let favoritesViewModel: FavoritesViewModel
     @State private var isContactPickerPresented = false
     @State private var isFavoriteSheetPresented = false
+    @StateObject private var locationProvider = CurrentLocationProvider()
     @State private var isFullScreenLocationMapPresented = false
     @State private var saveToPhotosFeedback: ActionFeedback?
     @State private var addToFavoriteFeedback: ActionFeedback?
@@ -132,6 +133,11 @@ struct GenerateView: View {
             .navigationTitle("tab.generate")
             .onChange(of: viewModel.contentDraft) { _, _ in
                 resetActionFeedbackBadges()
+            }
+            .onChange(of: viewModel.contentDraft.kind) { _, newKind in
+                if newKind == .location {
+                    locationProvider.requestAuthorizationIfNeeded()
+                }
             }
             .onChange(of: settingsViewModel.draftSettings) { _, _ in
                 resetActionFeedbackBadges()
