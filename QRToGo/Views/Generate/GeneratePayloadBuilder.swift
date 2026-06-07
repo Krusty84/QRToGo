@@ -109,15 +109,11 @@ struct GeneratePayloadBuilder {
     }
 
     static func parsedCoordinate(from value: String) -> Double? {
-        Double(
-            value
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: ",", with: ".")
-        )
+        LocationCoordinateFormatter.parse(value)
     }
 
     static func formattedCoordinate(_ value: Double) -> String {
-        String(format: "%.6f", value)
+        LocationCoordinateFormatter.storage(value)
     }
 
     private func wifiPayload() -> String {

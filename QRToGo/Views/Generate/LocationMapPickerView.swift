@@ -56,7 +56,7 @@ struct LocationMapPickerView: View {
                         MapScaleView()
                     }
                     .overlay {
-                        centerPin
+                        LocationCenterPinView(iconSize: 34, dotSize: 6, yOffset: -18)
                     }
                     .onMapCameraChange(frequency: .continuous) { context in
                         selectedCoordinate = context.region.center
@@ -125,23 +125,6 @@ struct LocationMapPickerView: View {
         )
     }
     
-    private func formattedCoordinate(_ value: Double) -> String {
-        String(format: "%.2f", value)
-    }
-    
-    private var centerPin: some View {
-        VStack(spacing: 0) {
-            Image(systemName: "mappin")
-                .font(.system(size: 34, weight: .semibold))
-
-            Circle()
-                .frame(width: 6, height: 6)
-        }
-        .offset(y: -18)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-    
     private var locationControlPanel: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
@@ -167,12 +150,12 @@ struct LocationMapPickerView: View {
                 HStack(spacing: 12) {
                     coordinateValueView(
                         titleKey: "generate.locationLatitude",
-                        value: formattedCoordinate(selectedCoordinate.latitude)
+                        value: LocationCoordinateFormatter.display(selectedCoordinate.latitude)
                     )
 
                     coordinateValueView(
                         titleKey: "generate.locationLongitude",
-                        value: formattedCoordinate(selectedCoordinate.longitude)
+                        value: LocationCoordinateFormatter.display(selectedCoordinate.longitude)
                     )
                 }
             }

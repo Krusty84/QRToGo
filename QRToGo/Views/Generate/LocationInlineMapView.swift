@@ -29,7 +29,7 @@ struct LocationInlineMapView: View {
             .frame(height: 220)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay {
-                centerPin
+                LocationCenterPinView(iconSize: 30, dotSize: 5, yOffset: -16)
             }
             .overlay(alignment: .topTrailing) {
                 Button {
@@ -78,18 +78,5 @@ struct LocationInlineMapView: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
             )
         )
-    }
-    
-    private var centerPin: some View {
-        VStack(spacing: 0) {
-            Image(systemName: "mappin")
-                .font(.system(size: 30, weight: .semibold))
-
-            Circle()
-                .frame(width: 5, height: 5)
-        }
-        .offset(y: -16)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }

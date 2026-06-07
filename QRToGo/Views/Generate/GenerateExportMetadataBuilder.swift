@@ -29,7 +29,7 @@ struct GenerateExportMetadataBuilder {
             },
             createdLine: QRCodeExportCardLine(
                 label: AppLocalization.string("export.card.created"),
-                value: exportDateText(for: createdAt)
+                value: QRCodeExportMetadataUtilities.exportDateText(for: createdAt)
             ),
             purposeLine: exportPurposeDraft.nonEmpty.map {
                 QRCodeExportCardLine(
@@ -43,10 +43,10 @@ struct GenerateExportMetadataBuilder {
     func exportSearchMetadata(createdAt: Date) -> QRCodeExportCardSearchMetadata {
         let safeSummary = exportSafeSummary()
         let title = AppLocalization.string("export.card.title")
-        let createdText = exportDateText(for: createdAt)
+        let createdText = QRCodeExportMetadataUtilities.exportDateText(for: createdAt)
         var descriptionParts = [
             title,
-            labeledText(
+            QRCodeExportMetadataUtilities.labeledText(
                 labelKey: "export.card.type",
                 value: AppLocalization.string(draft.kind.titleKey)
             )
@@ -54,21 +54,30 @@ struct GenerateExportMetadataBuilder {
 
         if let detailValue = safeSummary.detailValue {
             descriptionParts.append(
-                labeledText(labelKey: safeSummary.detailLabelKey, value: detailValue)
+                QRCodeExportMetadataUtilities.labeledText(
+                    labelKey: safeSummary.detailLabelKey,
+                    value: detailValue
+                )
             )
         }
 
         if let purpose = exportPurposeDraft.nonEmpty {
             descriptionParts.append(
-                labeledText(labelKey: "export.card.purpose", value: purpose)
+                QRCodeExportMetadataUtilities.labeledText(
+                    labelKey: "export.card.purpose",
+                    value: purpose
+                )
             )
         }
 
         descriptionParts.append(
-            labeledText(labelKey: "export.card.created", value: createdText)
+            QRCodeExportMetadataUtilities.labeledText(
+                labelKey: "export.card.created",
+                value: createdText
+            )
         )
 
-        let keywords = uniqueKeywords(
+        let keywords = QRCodeExportMetadataUtilities.uniqueKeywords(
             [
                 title,
                 "QR",
@@ -214,21 +223,13 @@ struct GenerateExportMetadataBuilder {
         }
     }
 
-    private func exportDateText(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = AppLanguageStore().load().locale
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.dateFormat = "d MMM yy"
-        return formatter.string(from: date)
-    }
-
     private func exportOriginalFilename(createdAt: Date) -> String {
         let safeSummary = exportSafeSummary()
-        let timestamp = exportFilenameDateText(for: createdAt)
+        let timestamp = QRCodeExportMetadataUtilities.exportFilenameDateText(for: createdAt)
         let components = [
             "QRToGO",
             exportFilenameTypeComponent(),
-            safeSummary.filenameHint.flatMap(filenameSlug(from:)),
+            safeSummary.filenameHint.flatMap(QRCodeExportMetadataUtilities.filenameSlug(from:)),
             timestamp
         ].compactMap { $0 }
 
@@ -236,15 +237,6 @@ struct GenerateExportMetadataBuilder {
         let truncatedBaseName = String(baseName.prefix(92))
             .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
         return "\(truncatedBaseName).png"
-    }
-
-    private func exportFilenameDateText(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = "yyyy-MM-dd-HHmm"
-        return formatter.string(from: date)
     }
 
     private func exportFilenameTypeComponent() -> String {
@@ -267,44 +259,6 @@ struct GenerateExportMetadataBuilder {
             "Location"
         }
     }
-
-    private func filenameSlug(from value: String) -> String? {
-        let latinText = value.applyingTransform(.toLatin, reverse: false) ?? value
-        let foldedText = latinText.folding(options: .diacriticInsensitive, locale: .current)
-        let slug = foldedText
-            .replacingOccurrences(of: "[^A-Za-z0-9]+", with: "-", options: .regularExpression)
-            .replacingOccurrences(of: "-{2,}", with: "-", options: .regularExpression)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-            .lowercased()
-
-        guard slug.isEmpty == false else {
-            return nil
-        }
-
-        return String(slug.prefix(32))
-    }
-
-    private func labeledText(labelKey: String, value: String) -> String {
-        "\(AppLocalization.string(labelKey)): \(value)"
-    }
-
-    private func uniqueKeywords(_ values: [String?]) -> [String] {
-        var seen: Set<String> = []
-        var uniqueValues: [String] = []
-
-        for value in values {
-            guard let trimmedValue = value?.trimmingCharacters(in: .whitespacesAndNewlines), trimmedValue.isEmpty == false else {
-                continue
-            }
-            let dedupeKey = trimmedValue.lowercased()
-            guard seen.insert(dedupeKey).inserted else {
-                continue
-            }
-            uniqueValues.append(trimmedValue)
-        }
-
-        return uniqueValues
-    }
 }
 
 private struct ExportSafeSummary {
@@ -312,11 +266,4 @@ private struct ExportSafeSummary {
     let detailValue: String?
     let keywordValues: [String]
     let filenameHint: String?
-}
-
-private extension String {
-    var nonEmpty: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
 }
