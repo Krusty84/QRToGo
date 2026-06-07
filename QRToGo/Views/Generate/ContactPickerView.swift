@@ -2,7 +2,7 @@
 //  ContactPickerView.swift
 //  QRToGo
 //
-//  Created by Codex on 30/05/2026.
+//  Created by Sedoykin Alexey on 30/05/2026.
 //
 
 import ContactsUI

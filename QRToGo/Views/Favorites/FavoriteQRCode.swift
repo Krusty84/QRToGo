@@ -2,7 +2,7 @@
 //  FavoriteQRCode.swift
 //  QRToGo
 //
-//  Created by Codex on 04/06/2026.
+//  Created by Sedoykin Alexey on 04/06/2026.
 //
 
 import Foundation

@@ -1,0 +1,276 @@
+//
+//  GeneratePayloadBuilder.swift
+//  QRToGo
+//
+//  Created by Sedoykin Alexey on 07/06/2026.
+//
+
+import Foundation
+
+struct GeneratePayloadBuilder {
+    let draft: GenerateContentDraft
+
+    func generatedContent() throws -> String {
+        switch draft.kind {
+        case .website:
+            return try websitePayload()
+        case .contact:
+            guard let contact = draft.contact else {
+                throw GenerateContentError.contactMissing
+            }
+            return contact.vCardString
+        case .wifi:
+            let ssid = draft.wifiSSID.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard ssid.isEmpty == false else {
+                throw GenerateContentError.wifiSSIDMissing
+            }
+            if draft.wifiSecurity != .none,
+               draft.wifiPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            {
+                throw GenerateContentError.wifiPasswordMissing
+            }
+            return wifiPayload()
+        case .email:
+            let recipient = draft.emailTo.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard recipient.isEmpty == false else {
+                throw GenerateContentError.emailRecipientMissing
+            }
+            guard isValidEmailRecipientList(recipient) else {
+                throw GenerateContentError.emailRecipientInvalid
+            }
+            return emailPayload(for: recipient)
+        case .sms:
+            let number = draft.smsNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard number.isEmpty == false else {
+                throw GenerateContentError.smsNumberMissing
+            }
+            return smsPayload(for: number)
+        case .call:
+            let number = draft.callNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard number.isEmpty == false else {
+                throw GenerateContentError.phoneNumberMissing
+            }
+            return "tel:\(number)"
+        case .event:
+            let title = draft.eventTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard title.isEmpty == false else {
+                throw GenerateContentError.eventTitleMissing
+            }
+            guard draft.eventEndDate >= draft.eventStartDate else {
+                throw GenerateContentError.eventDateRangeInvalid
+            }
+            return eventPayload()
+        case .location:
+            return try locationPayload()
+        }
+    }
+
+    func websitePayload() throws -> String {
+        let trimmedValue = draft.websiteURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedValue.isEmpty == false else {
+            throw GenerateContentError.websiteURLMissing
+        }
+
+        let candidateValue: String
+        if trimmedValue.contains("://") {
+            candidateValue = trimmedValue
+        } else {
+            candidateValue = "https://\(trimmedValue)"
+        }
+
+        guard let components = URLComponents(string: candidateValue),
+              let scheme = components.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              let host = components.host?.trimmingCharacters(in: .whitespacesAndNewlines),
+              host.isEmpty == false,
+              let url = components.url
+        else {
+            throw GenerateContentError.websiteURLInvalid
+        }
+
+        return url.absoluteString
+    }
+
+    func locationSelection() -> GenerateLocationSelection? {
+        guard
+            let latitude = Self.parsedCoordinate(from: draft.locationLatitude),
+            let longitude = Self.parsedCoordinate(from: draft.locationLongitude),
+            (-90...90).contains(latitude),
+            (-180...180).contains(longitude)
+        else {
+            return nil
+        }
+
+        return GenerateLocationSelection(
+            latitude: latitude,
+            longitude: longitude,
+            label: draft.locationLabel
+        )
+    }
+
+    static func parsedCoordinate(from value: String) -> Double? {
+        Double(
+            value
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: ",", with: ".")
+        )
+    }
+
+    static func formattedCoordinate(_ value: Double) -> String {
+        String(format: "%.6f", value)
+    }
+
+    private func wifiPayload() -> String {
+        let ssid = escapedWiFiValue(draft.wifiSSID)
+        let hiddenValue = draft.wifiIsHidden ? "true" : "false"
+
+        if draft.wifiSecurity == .none {
+            return "WIFI:T:\(draft.wifiSecurity.payloadValue);S:\(ssid);H:\(hiddenValue);;"
+        }
+
+        let password = escapedWiFiValue(draft.wifiPassword)
+        return "WIFI:T:\(draft.wifiSecurity.payloadValue);S:\(ssid);P:\(password);H:\(hiddenValue);;"
+    }
+
+    private func emailPayload(for recipient: String) -> String {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = recipient
+
+        var queryItems: [URLQueryItem] = []
+        let subject = draft.emailSubject.trimmingCharacters(in: .whitespacesAndNewlines)
+        if subject.isEmpty == false {
+            queryItems.append(URLQueryItem(name: "subject", value: subject))
+        }
+        let body = draft.emailBody.trimmingCharacters(in: .whitespacesAndNewlines)
+        if body.isEmpty == false {
+            queryItems.append(URLQueryItem(name: "body", value: body))
+        }
+        components.queryItems = queryItems.isEmpty ? nil : queryItems
+        return components.string ?? "mailto:\(recipient)"
+    }
+
+    private func smsPayload(for number: String) -> String {
+        var components = URLComponents()
+        components.scheme = "sms"
+        components.path = number
+
+        let body = draft.smsBody.trimmingCharacters(in: .whitespacesAndNewlines)
+        if body.isEmpty == false {
+            components.queryItems = [URLQueryItem(name: "body", value: body)]
+        }
+
+        return components.string ?? "sms:\(number)"
+    }
+
+    private func eventPayload() -> String {
+        let summary = escapedICSValue(draft.eventTitle)
+        let location = escapedICSValue(draft.eventLocation)
+        let notes = escapedICSValue(draft.eventNotes)
+
+        var lines = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//QRToGo//EN",
+            "BEGIN:VEVENT",
+            "UID:\(eventUID())",
+            "DTSTAMP:\(Self.icsTimestamp(for: .now))",
+            "DTSTART:\(Self.icsTimestamp(for: draft.eventStartDate))",
+            "DTEND:\(Self.icsTimestamp(for: draft.eventEndDate))",
+            "SUMMARY:\(summary)"
+        ]
+
+        if location.isEmpty == false {
+            lines.append("LOCATION:\(location)")
+        }
+        if notes.isEmpty == false {
+            lines.append("DESCRIPTION:\(notes)")
+        }
+
+        lines.append(contentsOf: [
+            "END:VEVENT",
+            "END:VCALENDAR"
+        ])
+        return lines.joined(separator: "\n")
+    }
+
+    private func locationPayload() throws -> String {
+        guard
+            let latitude = Self.parsedCoordinate(from: draft.locationLatitude),
+            let longitude = Self.parsedCoordinate(from: draft.locationLongitude),
+            (-90...90).contains(latitude),
+            (-180...180).contains(longitude)
+        else {
+            throw GenerateContentError.locationInvalid
+        }
+
+        let coordinateText = "\(Self.formattedCoordinate(latitude)),\(Self.formattedCoordinate(longitude))"
+        let label = draft.locationLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard label.isEmpty == false else {
+            return "geo:\(coordinateText)"
+        }
+
+        var components = URLComponents()
+        components.scheme = "geo"
+        components.path = coordinateText
+        components.queryItems = [
+            URLQueryItem(name: "q", value: "\(coordinateText)(\(label))")
+        ]
+        return components.string ?? "geo:\(coordinateText)"
+    }
+
+    private func isValidEmailRecipientList(_ value: String) -> Bool {
+        let recipients = value
+            .split(whereSeparator: { $0 == "," || $0 == ";" })
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+
+        guard recipients.isEmpty == false else {
+            return false
+        }
+
+        return recipients.allSatisfy(isValidSingleEmailAddress)
+    }
+
+    private func isValidSingleEmailAddress(_ value: String) -> Bool {
+        let pattern = #"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$"#
+
+        return value.range(
+            of: pattern,
+            options: [.regularExpression, .caseInsensitive]
+        ) != nil
+    }
+
+    private func escapedWiFiValue(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: ";", with: "\\;")
+            .replacingOccurrences(of: ",", with: "\\,")
+            .replacingOccurrences(of: ":", with: "\\:")
+    }
+
+    private func escapedICSValue(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: ";", with: "\\;")
+            .replacingOccurrences(of: ",", with: "\\,")
+            .replacingOccurrences(of: "\n", with: "\\n")
+    }
+
+    private static func icsTimestamp(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
+        return formatter.string(from: date)
+    }
+
+    private func eventUID() -> String {
+        let title = draft.eventTitle
+            .lowercased()
+            .replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+        return "qrtogo-\(Int(draft.eventStartDate.timeIntervalSince1970))-\(title.isEmpty ? "event" : title)@local"
+    }
+}

@@ -2,7 +2,7 @@
 //  ContactVCardPayloadBuilder.swift
 //  QRToGo
 //
-//  Created by Codex on 03/06/2026.
+//  Created by Sedoykin Alexey on 03/06/2026.
 //
 
 import Contacts

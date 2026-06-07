@@ -2,7 +2,7 @@
 //  ImageCropView.swift
 //  QRToGo
 //
-//  Created by Codex on 01/06/2026.
+//  Created by Sedoykin Alexey on 01/06/2026.
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  QRCodeExportCardRenderer.swift
 //  QRToGo
 //
-//  Created by Codex on 31/05/2026.
+//  Created by Sedoykin Alexey on 31/05/2026.
 //
 
 import ImageIO
