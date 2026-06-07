@@ -1,6 +1,7 @@
 "candidate.kind.contact" = "Contact";
 "candidate.kind.remoteFileURL" = "Remote file URL";
 "candidate.kind.telegramLink" = "Telegram link";
+"candidate.kind.text" = "Text";
 "candidate.kind.webURL" = "Website";
 "error.appGroupUnavailable" = "The shared App Group container is unavailable.";
 "error.emptyContent" = "There is no content to encode.";

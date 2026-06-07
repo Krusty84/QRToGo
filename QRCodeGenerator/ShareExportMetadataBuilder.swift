@@ -146,6 +146,18 @@ struct ShareExportMetadataBuilder {
                 filenameTypeComponent: "RemoteFile",
                 filenameHint: urlFilenameHint(from: address) ?? address
             )
+        case .text:
+            let details = candidate.previewValue.nonEmpty ?? candidate.content.nonEmpty
+            return ShareExportSafeSummary(
+                typeText: AppLocalization.string(candidate.kind.titleKey),
+                iconSystemName: "doc.text",
+                detailLabelKey: "export.card.details",
+                detailValue: details,
+                purposeValue: nil,
+                keywordValues: [details].compactMap { $0 },
+                filenameTypeComponent: "Text",
+                filenameHint: details
+            )
         case .contact:
             let details = candidate.previewValue.nonEmpty ?? candidate.sourceTitle?.nonEmpty
             return ShareExportSafeSummary(

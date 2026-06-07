@@ -13,6 +13,7 @@ struct SharedInputCandidate: Identifiable, Hashable {
         case webURL
         case telegramLink
         case remoteFileURL
+        case text
         case contact
 
         var id: String { rawValue }
@@ -22,6 +23,7 @@ struct SharedInputCandidate: Identifiable, Hashable {
             case .webURL: "candidate.kind.webURL"
             case .telegramLink: "candidate.kind.telegramLink"
             case .remoteFileURL: "candidate.kind.remoteFileURL"
+            case .text: "candidate.kind.text"
             case .contact: "candidate.kind.contact"
             }
         }
@@ -31,7 +33,8 @@ struct SharedInputCandidate: Identifiable, Hashable {
             case .webURL: 0
             case .telegramLink: 1
             case .remoteFileURL: 2
-            case .contact: 3
+            case .text: 3
+            case .contact: 4
             }
         }
     }
@@ -85,6 +88,10 @@ struct SharedInputReader {
     }
 
     private func readCandidates(from provider: NSItemProvider) async -> [SharedInputCandidate] {
+        #if DEBUG
+        print("Share provider registeredTypeIdentifiers:", provider.registeredTypeIdentifiers)
+        #endif
+
         if let vCardCandidate = try? await vCardCandidate(from: provider) {
             return [vCardCandidate]
         }
@@ -97,7 +104,7 @@ struct SharedInputReader {
 
         if let fileURL = try? await loadURL(from: provider, typeIdentifier: UTType.fileURL.identifier) {
             if fileURL.isFileURL {
-                if let contactCandidate = try? await contactCandidate(for: fileURL, preferredTypeIdentifier: UTType.vCard.identifier) {
+                if let contactCandidate = try? contactCandidate(for: fileURL, preferredTypeIdentifier: UTType.vCard.identifier) {
                     return [contactCandidate]
                 }
             } else {
@@ -108,6 +115,8 @@ struct SharedInputReader {
         if let importedVCardCandidate = try? await importedVCardCandidate(from: provider) {
             return [importedVCardCandidate]
         }
+
+        parsedCandidates.append(contentsOf: await textCandidates(from: provider))
 
         return deduplicatedAndSorted(parsedCandidates)
     }
@@ -256,6 +265,81 @@ struct SharedInputReader {
         return nil
     }
 
+    private func textCandidates(from provider: NSItemProvider) async -> [SharedInputCandidate] {
+        let identifiers = provider.registeredTypeIdentifiers.filter(isTextTypeIdentifier)
+        var parsedCandidates: [SharedInputCandidate] = []
+
+        for typeIdentifier in identifiers {
+            if let text = try? await loadText(from: provider, typeIdentifier: typeIdentifier) {
+                parsedCandidates.append(contentsOf: candidates(fromSharedText: text))
+            }
+        }
+
+        if identifiers.isEmpty {
+            for fallbackIdentifier in [UTType.plainText.identifier, UTType.text.identifier]
+            where provider.hasItemConformingToTypeIdentifier(fallbackIdentifier) {
+                if let text = try? await loadText(from: provider, typeIdentifier: fallbackIdentifier) {
+                    parsedCandidates.append(contentsOf: candidates(fromSharedText: text))
+                }
+            }
+        }
+
+        return deduplicatedAndSorted(parsedCandidates)
+    }
+
+    private func loadText(from provider: NSItemProvider, typeIdentifier: String) async throws -> String? {
+        guard provider.hasItemConformingToTypeIdentifier(typeIdentifier) else {
+            return nil
+        }
+
+        let item = try await loadItem(from: provider, typeIdentifier: typeIdentifier)
+        if let string = stringValue(item) {
+            return string
+        }
+        if let attributedString = item as? NSAttributedString {
+            return attributedString.string
+        }
+        if let data = item as? Data {
+            return String(data: data, encoding: .utf8)
+        }
+        return nil
+    }
+
+    private func candidates(fromSharedText text: String) -> [SharedInputCandidate] {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedText.isEmpty == false else {
+            return []
+        }
+
+        let detectedURLCandidates = deduplicatedAndSorted(
+            detectedURLs(in: trimmedText).flatMap { urlCandidates(from: $0) }
+        )
+        if detectedURLCandidates.isEmpty == false {
+            return detectedURLCandidates
+        }
+
+        return [
+            SharedInputCandidate(
+                kind: .text,
+                sourceTitle: nil,
+                content: trimmedText,
+                previewValue: textPreviewValue(from: trimmedText)
+            )
+        ]
+    }
+
+    private func detectedURLs(in text: String) -> [URL] {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return []
+        }
+
+        let nsText = text as NSString
+        let range = NSRange(location: 0, length: nsText.length)
+        return detector.matches(in: text, options: [], range: range).compactMap { match in
+            match.url
+        }
+    }
+
     private func loadItem(from provider: NSItemProvider, typeIdentifier: String) async throws -> Any? {
         try await withCheckedThrowingContinuation { continuation in
             provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, error in
@@ -358,6 +442,24 @@ struct SharedInputReader {
             return string as String
         }
         return nil
+    }
+
+    private func textPreviewValue(from text: String) -> String {
+        guard text.count > 120 else {
+            return text
+        }
+        return "\(text.prefix(117))..."
+    }
+
+    private func isTextTypeIdentifier(_ typeIdentifier: String) -> Bool {
+        if typeIdentifier == UTType.text.identifier || typeIdentifier == UTType.plainText.identifier {
+            return true
+        }
+        if let contentType = UTType(typeIdentifier) {
+            return contentType.conforms(to: .text)
+        }
+        return typeIdentifier.localizedCaseInsensitiveContains("plain-text")
+            || typeIdentifier.localizedCaseInsensitiveContains("text")
     }
 
     private func isVCardTypeIdentifier(_ typeIdentifier: String) -> Bool {
