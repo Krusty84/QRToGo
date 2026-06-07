@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct GenerateView: View {
     @Bindable var viewModel: GenerateViewModel
@@ -136,8 +137,15 @@ struct GenerateView: View {
             }
             .onChange(of: viewModel.contentDraft.kind) { _, newKind in
                 if newKind == .location {
-                    locationProvider.requestAuthorizationIfNeeded()
+                    locationProvider.prepareForLocationMode()
                 }
+            }
+            .onReceive(locationProvider.$currentSelection.compactMap { $0 }) { selection in
+                guard viewModel.contentDraft.kind == .location else {
+                    return
+                }
+
+                viewModel.setSelectedLocation(selection)
             }
             .onChange(of: settingsViewModel.draftSettings) { _, _ in
                 resetActionFeedbackBadges()

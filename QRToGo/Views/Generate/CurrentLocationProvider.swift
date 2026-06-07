@@ -27,7 +27,7 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         authorizationStatus = manager.authorizationStatus
     }
 
-    func requestAuthorizationIfNeeded() {
+    func requestLocationAuthorizationIfNeeded() {
         errorMessage = nil
         authorizationStatus = manager.authorizationStatus
 
@@ -53,6 +53,29 @@ final class CurrentLocationProvider: NSObject, ObservableObject, CLLocationManag
         #if DEBUG
         print("Location authorization status:", authorizationStatus.rawValue)
         #endif
+
+        switch authorizationStatus {
+        case .notDetermined:
+            pendingLocationRequest = true
+            manager.requestWhenInUseAuthorization()
+
+        case .authorizedWhenInUse, .authorizedAlways:
+            pendingLocationRequest = false
+            requestLocationAfterServicesCheck()
+
+        case .denied, .restricted:
+            pendingLocationRequest = false
+            errorMessage = AppLocalization.string("generate.locationPermissionDenied")
+
+        @unknown default:
+            pendingLocationRequest = false
+            errorMessage = AppLocalization.string("generate.locationUnavailable")
+        }
+    }
+    
+    func prepareForLocationMode() {
+        errorMessage = nil
+        authorizationStatus = manager.authorizationStatus
 
         switch authorizationStatus {
         case .notDetermined:
