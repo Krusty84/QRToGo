@@ -135,10 +135,12 @@ struct GenerateView: View {
             .onChange(of: viewModel.contentDraft) { _, _ in
                 resetActionFeedbackBadges()
             }
-            .onChange(of: viewModel.contentDraft.kind) { _, newKind in
-                if newKind == .location {
-                    locationProvider.prepareForLocationMode()
+            .task(id: viewModel.contentDraft.kind) {
+                guard viewModel.contentDraft.kind == .location else {
+                    return
                 }
+
+                locationProvider.prepareForLocationMode()
             }
             .onReceive(locationProvider.$currentSelection.compactMap { $0 }) { selection in
                 guard viewModel.contentDraft.kind == .location else {
