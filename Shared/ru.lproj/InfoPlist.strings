@@ -1,0 +1,4 @@
+"NSContactsUsageDescription" = "Доступ к контактам нужен для создания QR-кодов из адресной книги.";
+"NSPhotoLibraryAddUsageDescription" = "Доступ к Фото нужен для сохранения созданных QR-кодов.";
+"NSPhotoLibraryUsageDescription" = "Доступ к чтению и записи Фото нужен для сохранения QR-кодов в Фото.";
+"NSLocationWhenInUseUsageDescription" = "Доступ к местоположению нужен для создания QR-кодов с вашим текущим местоположением.";

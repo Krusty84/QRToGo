@@ -23,7 +23,7 @@ struct FavoriteListRow: View {
 
             if isDeleteConfirmationVisible {
                 FavoriteInlineDeleteConfirmation(
-                    favoriteName: favorite.name,
+                    favoriteName: FavoriteDefaultNames.displayName(for: favorite.name),
                     onDelete: onConfirmDelete,
                     onCancel: onCancelDelete
                 )

@@ -21,6 +21,7 @@ struct FavoriteDetailView: View {
 
     var body: some View {
         if let favorite = viewModel.favorite(id: favoriteID) {
+            let displayName = FavoriteDefaultNames.displayName(for: favorite.name)
             Form {
                 Section("favorites.preview") {
                     QRPreviewView(
@@ -31,7 +32,7 @@ struct FavoriteDetailView: View {
                 }
 
                 Section {
-                    LabeledContent("favorites.name", value: favorite.name)
+                    LabeledContent("favorites.name", value: displayName)
                     LabeledContent("export.card.type") {
                         Label(
                             LocalizedStringKey(favorite.kind.titleKey),
@@ -53,7 +54,7 @@ struct FavoriteDetailView: View {
                     )
                 }
             }
-            .navigationTitle(favorite.name)
+            .navigationTitle(displayName)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -74,7 +75,7 @@ struct FavoriteDetailView: View {
                 generatePreview(for: favorite)
             }
             .sheet(isPresented: $isRenamePresented) {
-                FavoriteRenameSheet(initialName: favorite.name) { name in
+                FavoriteRenameSheet(initialName: displayName) { name in
                     renameFavorite(to: name)
                 }
             }

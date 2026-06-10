@@ -13,7 +13,7 @@ struct FavoriteRow: View {
     var body: some View {
         Label {
             VStack(alignment: .leading, spacing: 4) {
-                Text(favorite.name)
+                Text(FavoriteDefaultNames.displayName(for: favorite.name))
                     .font(.headline)
 
                 Text(LocalizedStringKey(favorite.kind.titleKey))

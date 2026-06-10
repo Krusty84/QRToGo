@@ -21,7 +21,7 @@ final class FavoriteQuickActionService {
             .map { favorite in
                 UIApplicationShortcutItem(
                     type: FavoriteQuickActionConstants.favoriteType,
-                    localizedTitle: favorite.name,
+                    localizedTitle: FavoriteDefaultNames.displayName(for: favorite.name),
                     localizedSubtitle: AppLocalization.string(favorite.kind.titleKey),
                     icon: UIApplicationShortcutIcon(systemImageName: favorite.kind.systemImage),
                     userInfo: [

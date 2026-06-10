@@ -11,6 +11,7 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
     case system
     case english
     case simplifiedChinese
+    case russian
 
     var id: String { rawValue }
 
@@ -19,6 +20,7 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
         case .system: "settings.language.system"
         case .english: "settings.language.english"
         case .simplifiedChinese: "settings.language.simplifiedChinese"
+        case .russian: "settings.language.russian"
         }
     }
 
@@ -30,6 +32,8 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
             Locale(identifier: "en")
         case .simplifiedChinese:
             Locale(identifier: "zh-Hans")
+        case .russian:
+            Locale(identifier: "ru")
         }
     }
 
@@ -41,6 +45,8 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
             "en"
         case .simplifiedChinese:
             "zh-Hans"
+        case .russian:
+            "ru"
         }
     }
 }

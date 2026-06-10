@@ -37,7 +37,9 @@ struct FavoritesView: View {
             handleRequestedFavorite()
         }
         .sheet(item: $favoriteToRename) { favorite in
-            FavoriteRenameSheet(initialName: favorite.name) { name in
+            FavoriteRenameSheet(
+                initialName: FavoriteDefaultNames.displayName(for: favorite.name)
+            ) { name in
                 renameFavorite(favorite, to: name)
             }
         }
