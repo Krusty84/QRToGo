@@ -1,5 +1,5 @@
-# QR2Go
-
+# QR2Go [![Download on the App Store](https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1780963200)](https://apps.apple.com/us/app/qr2go/id6773437162?itscg=30200&itsct=apps_box_badge&mttnsubad=6773437162)
+    
 ## What Is This?
 QR2Go helps you create, save, and reuse QR codes for websites, contacts, Wi-Fi, messages, locations, and more.
 
